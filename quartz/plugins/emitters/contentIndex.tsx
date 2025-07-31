@@ -127,7 +127,6 @@ export const ContentIndex: QuartzEmitterPlugin<Partial<Options>> = (opts) => {
   bypassIndexCheck: true,
   to your configuration for Plugin.ContentIndex({...}) in quartz.config.ts.
   Don't do this unless you know what you're doing!`),
-    return []
     }
 
     const cfg = ctx.cfg.configuration
