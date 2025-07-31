@@ -8,7 +8,6 @@ import { toHtml } from "hast-util-to-html"
 import { write } from "./helpers"
 import { i18n } from "../../i18n"
 import { BuildCtx } from "../../util/ctx"
-import chalk from "chalk"
 import { ProcessedContent } from "../vfile"
 
 type ContentIndex = Tree<TreeNode>
@@ -122,14 +121,12 @@ export const ContentIndex: QuartzEmitterPlugin<Partial<Options>> = (opts) => {
       content.map(([_, c]) => c.data.slug!).includes("index" as FullSlug)
     )
     ) {
-    console.warn(
-      chalk.yellow(`Warning: contentIndex: 
+    console.warn(`Warning: contentIndex: 
   content/ folder is missing an index.md. RSS feeds and sitemap will not be generated.
   If you still wish to generate these files, add:
   bypassIndexCheck: true,
   to your configuration for Plugin.ContentIndex({...}) in quartz.config.ts.
   Don't do this unless you know what you're doing!`),
-    )
     return []
     }
 
