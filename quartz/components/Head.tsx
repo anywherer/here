@@ -68,7 +68,7 @@ export default (() => {
         <meta property="twitter:title" content={title} />
         <meta property="twitter:description" content={description} />
         <meta property="twitter:url" content={url} />
-        <meta property="twitter:image" content={ogImagePath} />
+        <meta property="twitter:image" content={ogImageDefaultPath} />
 
         <meta name="og:site_name" content={cfg.pageTitle}></meta>
         <meta property="og:description" content={description} />
