@@ -80,15 +80,14 @@ function finishRSSFeed(cfg: GlobalConfiguration, opts: Partial<Options>, entries
   .map((e) => e.item)
   
   return `<?xml version="1.0" encoding="UTF-8" ?>
-<rss version="2.0">
-  <channel>
-  <title>${escapeHTML(cfg.pageTitle)}</title>
-  <link>${base}</link>
-  <description>Welcome to some of my thoughts and writings, big and small.</description>
-  ${items}
-  </channel>
-</rss>`
-}
+  <rss version="2.0">
+    <channel>
+    <title>${feedTitle}</title>
+    <link>https://${base}</link>
+    <description>Welcome to some of my thoughts and writings, big and small.</description>
+    </channel>
+  </rss>`
+  }
 
 function generateRSSEntry(cfg: GlobalConfiguration, details: ContentDetails): Entry {
   const base = cfg.baseUrl ?? ""
