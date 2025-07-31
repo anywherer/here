@@ -1,4 +1,4 @@
-name: Deploy to Github Pages
+name: Deploy
 
 on:
   workflow_dispatch:
@@ -23,7 +23,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
+      - name: actions/checkout@v4
         uses: actions/checkout@v4
       - name: actions/setup-node@v4
         uses: actions/setup-node@v4
@@ -49,6 +49,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Deployment
+      - name: actions/deploy-pages@v4
         id: deployment
         uses: actions/deploy-pages@v4
