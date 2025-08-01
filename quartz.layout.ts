@@ -7,12 +7,6 @@ export const sharedPageComponents: SharedLayout = {
   header: [],
   afterBody: [
     Component.MobileOnly(Component.TableOfContents()),
-    Component.RecentNotes({
-      title: "featured",
-      limit: 5,
-      showTags: false,
-      linkToMore: "/tags/featured",
-    }),
   ],
   footer: Component.Footer({
     links: {
