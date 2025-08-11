@@ -2,23 +2,25 @@
 title: 
 description: 
 aliases: 
-tags: 
+tags:
+  - all
+  - extrospection
 created: 2024-11-06T19:05:11
-modified: 2025-02-23T19:11:06
-publish: 
-published: 
+modified: 2025-08-11T21:01:12
+publish: true
+published: 2024-11-06
 permalink: 
 ---
 
+"Nothing bad ever happens here" is a biography of exploration, of love, and spirituality.
 
+The author really makes me appreciate the wonder of living life to the fullest, to embrace the world and your flowing emotions.
 
+This is the first biography I've read in a long time, and I've been lucky enough to find such a beautiful narrative of traveling and feeling.
 
-"Nothing bad ever happens here" is a biography of exploration, of love, of spirituality.
+Here are a few extracts, to demonstrate why this book has touch me so deeply.
 
-The author really makes one appreciate the wonder of living life to the fullest, to embrace the world and your flowing emotions.
-
-This is the first biography I've read in a long time, and I've been lucky enough to find such a beautiful narrative of travelling and feeling.
-
+To this day, this is the most influential biography I've read.
 
 > Our house is the first on a new subdivision above a curve of beachside shacks. We are surrounded by farms, apricot orchards, paddocks and dams. Throughout the sixties and seventies, a new house is always being built, a new family moving in. Kerbs and bitumen arrive, washing lines and paling fences. Our neighbours are public servants, business people, stay-at-home mums, teachers, academics, architects and retirees. There is a small government primary school.
 > Both sets of grandparents live close by, as well as cousins from Dad’s side of the family. We children roam the farmland that is yet to become suburbia, building forts in sandy embankments, climbing the seaside cliffs, catching tadpoles in the dams, kicking the footy on the oval, playing beach cricket, swimming in the sea, exploring rock pools and riding our bikes everywhere like mad things. In winter we take cardboard and slide down the icy paddock behind the house. Only rarely does it snow, down there so close to the sea, and when it does we are awestruck.

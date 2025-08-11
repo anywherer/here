@@ -4,8 +4,9 @@ description:
 aliases: 
 tags:
   - all
+  - mechanic
 created: 2025-03-16T09:21:11
-modified: 2025-06-21T12:54:11
+modified: 2025-08-11T20:15:48
 publish: true
 published: 2025-03-16
 permalink: 

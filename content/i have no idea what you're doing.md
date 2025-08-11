@@ -4,8 +4,9 @@ description:
 aliases: 
 tags:
   - all
+  - poem
 created: 2025-02-23T18:46:47
-modified: 2025-02-23T19:12:09
+modified: 2025-08-11T20:40:13
 publish: true
 published: 2025-02-23
 permalink: 
