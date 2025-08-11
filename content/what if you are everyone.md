@@ -4,8 +4,9 @@ description:
 aliases: 
 tags:
   - all
+  - theory
 created: 2024-11-25T19:40:02
-modified: 2025-07-24T19:07:17
+modified: 2025-08-11T20:34:42
 publish: true
 published: 2024-11-25
 permalink: 

@@ -4,9 +4,9 @@ description:
 aliases: 
 tags:
   - all
-  - poetry
+  - poem
 created: 2024-12-25T20:03:06
-modified: 2025-06-21T13:32:54
+modified: 2025-08-11T20:40:25
 publish: true
 published: 2024-06-21
 permalink: 

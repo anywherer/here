@@ -4,8 +4,9 @@ description:
 aliases: 
 tags:
   - all
+  - introspection
 created: 2025-02-23T18:11:32
-modified: 2025-06-19T20:29:30
+modified: 2025-08-11T20:42:39
 publish: true
 published: 2025-02-23
 permalink: 

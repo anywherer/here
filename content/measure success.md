@@ -5,14 +5,14 @@ aliases:
 tags:
   - all
 created: 2024-11-06T20:14:54
-modified: 2025-03-09T18:20:30
+modified: 2025-08-11T20:02:55
 publish: true
 published: 2024-11-06
 permalink: 
 ---
 
 
-We constantly measure success. It's a subconsious and automatic process, to 
+We constantly measure success. It's a subconscious and automatic process, to 
 
 
 

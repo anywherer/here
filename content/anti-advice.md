@@ -5,7 +5,7 @@ aliases:
 tags:
   - all
 created: 2024-12-14T16:22:05
-modified: 2025-06-21T12:53:29
+modified: 2025-08-11T21:04:23
 publish: true
 published: 2025-02-23
 permalink: 
@@ -13,10 +13,10 @@ permalink:
 
 Anti-advice is giving people bad advice. It seems to work well.
 
-Anti-advice is not common. But when we find anti-advice, we are suddenly enlightened by the truth.
+Anti-advice is not common. But when we find anti-advice, we are suddenly enlightened by the truth. For example, see this [video](https://www.youtube.com/watch?v=LO1mTELoj6o).
 
-Someone telling you to do something but you want to do the opposite, such is a part of psychology.
+A part of psychology is that someone tells you to do something but you want to do the opposite.
 
-But it's more than that. It's fundamentally different to avoid some anti-advice, versus to follow advice. Losses are more important than wins.
+But it's more than that.
 
-https://www.youtube.com/watch?v=LO1mTELoj6o + 7 Ways to Maximize Misery 😞 + Adapted from How to Be Miserable by Randy J. Paterson PhD
+To avoid some anti-advice feels very different to following advice.
