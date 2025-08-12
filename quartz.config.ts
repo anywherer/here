@@ -6,7 +6,7 @@ const config: QuartzConfig = {
     pageTitle: "here ♡",
     pageTitleSuffix: " ♡",
     enableSPA: true,
-    enablePopovers: true,
+    enablePopovers: false,
     analytics: null,
     locale: "en-US",
     baseUrl: "somewherer.com",
