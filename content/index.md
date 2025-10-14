@@ -2,11 +2,12 @@
 title: here
 description: 
 aliases: 
-tags: 
+tags:
+  - all
 created: 2024-08-13T17:03:00
-modified: 2025-08-11T21:41:25
+modified: 2025-08-13T19:27:38
 publish: true
-published: 2025-02-23
+published: 2025-08-11
 permalink: here
 ---
 
@@ -17,9 +18,13 @@ In a world big and complicated
 
 Welcome to some of my thoughts and writings, big and small.
 
-The tags below are used to organize my posts. For a complete list see [tags](/tags).
+See all posts sorted by published date [here](/tags/all).
 
-[all](/tags/all): the whole of one's possessions, resources, or energy
+## tags
+
+These tags are used to categorize the posts.
+
+[life](/tags/life): the sequence of physical and mental experiences that make up the existence of an individual
 
 [theory](/tags/theory): a plausible principle offered to explain phenomena
 
@@ -35,4 +40,4 @@ The tags below are used to organize my posts. For a complete list see [tags](/ta
 
 [poem](/tags/poem): a piece of writing in which the words are carefully chosen for the images and ideas they suggest
 
-[life](/tags/life): the sequence of physical and mental experiences that make up the existence of an individual
+See all tags [here](/tags).

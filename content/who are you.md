@@ -4,8 +4,10 @@ description:
 aliases: 
 tags:
   - all
+  - introspection
+  - life
 created: 2025-08-11T21:37:25
-modified: 2025-08-11T21:48:47
+modified: 2025-08-13T19:59:08
 publish: true
 published: 2025-08-11
 permalink: 
@@ -23,15 +25,7 @@ The Ship of Theseus asks whether or not a ship that has had all of its component
 
 Who are you?
 
-As I always like to say, you are the sum of your experiences.
-
-Not your human body
-
-Not your personality
-
-Not your status
-
-Not your belongings
+Not your personality.
 
 Not your beliefs and values.
 
