@@ -2,13 +2,16 @@
 title: 
 description: 
 aliases: 
-tags: 
+tags:
+  - all
+  - life
 created: 2025-08-13T19:03:03
-modified: 2025-08-13T19:12:12
+modified: 2025-08-13T19:16:56
 publish: true
 published: 2025-08-13
-permalink:
+permalink: 
 ---
+
 In a Despicable Me movie, there's a nice song named Double Life.
 
 The concept of living multiples lives is exciting. In movies, it’s the superhero who files office reports by day and fights villains by night. In games, it’s the respawn mechanic — the joy of trying again, seeing how the story changes when you make different choices. And sometimes, it’s not fiction at all.
