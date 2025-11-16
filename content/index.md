@@ -2,11 +2,12 @@
 title: here
 description: 
 aliases: 
-tags: 
+tags:
+  - all
 created: 2024-08-13T17:03:00
-modified: 2025-11-16T13:04:34
+modified: 2025-08-13T19:27:38
 publish: true
-published: 2025-01-01
+published: 2025-08-11
 permalink: here
 ---
 
@@ -17,7 +18,7 @@ In a world big and complicated
 
 Welcome to some of my thoughts and writings, big and small.
 
-See [all posts](/tags/all) sorted by published date here.
+See all posts sorted by published date [here](/tags/all).
 
 ## tags
 
