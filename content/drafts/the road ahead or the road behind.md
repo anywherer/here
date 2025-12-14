@@ -6,15 +6,15 @@ tags:
   - all
   - poem
 created: 2024-12-25T20:03:06
-modified: 2025-08-11T20:40:25
-publish: true
+modified: 2025-12-14T19:08:41
+publish: false
 published: 2024-06-21
 permalink: 
 ---
 
 This poem reflects a similar outlook on life similar to my own.
 
-People determine their own fate
+People determine their own fate.
 
 Sometimes I think the fates must grin as we denounce them and insist,  
 The only reason we can’t win is the fates themselves have missed.  

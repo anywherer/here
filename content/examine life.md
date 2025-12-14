@@ -6,7 +6,7 @@ tags:
   - all
   - life
 created: 2025-08-14T14:43:09
-modified: 2025-08-14T19:09:57
+modified: 2025-12-14T18:05:22
 publish: true
 published: 2025-08-14
 permalink: 

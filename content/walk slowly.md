@@ -1,16 +1,17 @@
 ---
-title:
-description:
-aliases:
+title: 
+description: 
+aliases: 
 tags:
   - all
   - life
 created: 2025-10-14T16:00:00
-modified: 2025-10-14T21:00:00
+modified: 2025-12-14T18:05:22
 publish: true
 published: 2025-10-14
-permalink:
+permalink: 
 ---
+
 My friend always had a unique way of walking around in which he walks steadily at a pace of about 1.3 steps per second.
 
 It's a way of walking that is obviously automatic and leisurely, as casual and easy as if he's not walking at all. It's only a tiny bit slower than typical walking speed.

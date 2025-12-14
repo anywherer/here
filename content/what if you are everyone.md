@@ -6,7 +6,7 @@ tags:
   - all
   - theory
 created: 2024-11-25T19:40:02
-modified: 2025-08-11T20:34:42
+modified: 2025-12-14T19:34:29
 publish: true
 published: 2024-11-25
 permalink: 
@@ -18,18 +18,8 @@ permalink:
 
 You are the strong, the weak, the fortunate, the unfortunate.
 
-If this theory turns out to be the true nature of this universe, I would be relieved.
+Imagine a planet where you live by yourself, and one day you thought "would it be cool to grow a billion clones of me," and your clones casually divide up the land and threaten each other.
 
-Let's assume you are everyone.
+If The Egg turns out to be the true nature of this universe, I would be relieved. It means all murderers are you and all victims are you and you murdered yourself. The murderer wrestles with morality. The victim doesn't. You are not to blame.
 
-## kindness and empathy to everyone
-
-If the hungry child, the frustrated clerk and the billionaire on a yacht are all versions of you, 
-
-
-## whose side are you on?
-
-During childhood we 
-
-
-[^1]: https://www.ted.com/talks/ted_ed_what_if_you_experienced_every_human_life_in_history?subtitle=en
+If consciousness is a temporary product of your neurons, it makes sense that if you woke up as somebody else tomorrow, you would go about their life as normal. Physics doesn’t care which self-aware entity you are; it just runs the same rules on whatever brain happens to exist. In that sense, I may die every night and reappear every morning with access to the same memories. That fragile continuity is what we call consciousness.

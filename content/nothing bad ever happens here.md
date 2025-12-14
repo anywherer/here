@@ -6,7 +6,7 @@ tags:
   - all
   - extrospection
 created: 2024-11-06T19:05:11
-modified: 2025-08-11T21:01:12
+modified: 2025-12-14T19:08:49
 publish: true
 published: 2024-11-06
 permalink: 

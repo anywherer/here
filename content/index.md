@@ -2,12 +2,11 @@
 title: here
 description: 
 aliases: 
-tags:
-  - all
+tags: []
 created: 2024-08-13T17:03:00
-modified: 2025-08-13T19:27:38
+modified: 2025-11-23T12:08:14
 publish: true
-published: 2025-08-11
+published: 2025-01-01
 permalink: here
 ---
 
@@ -18,11 +17,11 @@ In a world big and complicated
 
 Welcome to some of my thoughts and writings, big and small.
 
-See all posts sorted by published date [here](/tags/all).
+See [all posts sorted by date](/tags/all).
 
 ## tags
 
-These tags are used to categorize the posts.
+These tags are used to categorize the posts. See [all tags](/tags).
 
 [life](/tags/life): the sequence of physical and mental experiences that make up the existence of an individual
 
@@ -39,5 +38,3 @@ These tags are used to categorize the posts.
 [health](/tags/health): the condition of one's body or mind
 
 [poem](/tags/poem): a piece of writing in which the words are carefully chosen for the images and ideas they suggest
-
-See all tags [here](/tags).

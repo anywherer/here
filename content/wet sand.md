@@ -1,16 +1,16 @@
 ---
-title:
-description:
-aliases:
+title: 
+description: 
+aliases: 
 tags:
   - all
   - life
   - introspection
 created: 2025-08-05T09:17:47
-modified: 2025-08-11T20:17:05
+modified: 2025-12-14T18:05:24
 publish: true
 published: 2025-08-23
-permalink:
+permalink: 
 ---
 
 Wet sand is a metaphor for taking care of yourself.
