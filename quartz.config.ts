@@ -49,7 +49,6 @@ const config: QuartzConfig = {
     transformers: [
       Plugin.HardLineBreaks(),
       Plugin.FrontMatter(),
-      Plugin.CanonicalSlug(), // <--- Cleanly imported from Plugin namespace
       Plugin.CreatedModifiedDate({
         priority: ["frontmatter", "git", "filesystem"],
       }),
