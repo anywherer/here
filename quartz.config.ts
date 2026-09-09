@@ -1,9 +1,6 @@
-import { QuartzConfig } from "./quartz/cfg"
-import * as Plugin from "./quartz/plugins"
 import { QuartzTransformerPlugin } from "./quartz/plugins/types"
-import { FilePath, FullSlug, slugifyFilePath } from "./quartz/util/path"
+import { FullSlug, sluggify } from "./quartz/util/path"
 
-// Custom transformer to overwrite canonical slug using frontmatter permalink/slug
 const CustomSlug: QuartzTransformerPlugin = () => ({
   name: "CustomSlug",
   markdownPlugins() {
@@ -11,15 +8,15 @@ const CustomSlug: QuartzTransformerPlugin = () => ({
       () => (_tree, file) => {
         const customSlug = file.data.frontmatter?.permalink || file.data.frontmatter?.slug
         if (typeof customSlug === "string" && customSlug.trim() !== "") {
-          // Strip any accidental leading/trailing slashes, then slugify
-          const clean = customSlug.replace(/^\/+|\/+$/g, "") as FilePath
-          file.data.slug = slugifyFilePath(clean) as FullSlug
+          file.data.slug = sluggify(customSlug) as FullSlug
         }
       },
     ]
   },
 })
 
+import { QuartzConfig } from "./quartz/cfg"
+import * as Plugin from "./quartz/plugins"
 
 const config: QuartzConfig = {
   configuration: {
