@@ -84,9 +84,29 @@ export class FileTrieNode<T extends FileTrieData = ContentDetails> {
     }
   }
 
-  // Add new file to trie
+// Add new file to trie
   add(file: T) {
-    this.insert(file.slug.split("/"), file)
+    let pathSegments = file.slug.split("/")
+
+    // If filePath is available, use the physical disk folders for the explorer tree
+    // while keeping file.slug for the actual link URL
+    const rawPath = (file as any).filePath as string | undefined
+    if (rawPath) {
+      const normalizedPath = rawPath.replace(/\\/g, "/")
+      const cleanPath = normalizedPath
+        .replace(/^content\//i, "") // strip "content/"
+        .replace(/\.md$/i, "")      // strip ".md"
+
+      const folderSegments = cleanPath.split("/").slice(0, -1)
+
+      if (folderSegments.length > 0) {
+        // Keep the note's custom slug/name as the leaf, nested under its disk folders
+        const fileSegment = pathSegments[pathSegments.length - 1]
+        pathSegments = [...folderSegments, fileSegment]
+      }
+    }
+
+    this.insert(pathSegments, file)
   }
 
   findNode(path: string[]): FileTrieNode<T> | undefined {
