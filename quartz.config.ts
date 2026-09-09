@@ -1,20 +1,3 @@
-import { QuartzTransformerPlugin } from "./quartz/plugins/types"
-import { FullSlug, sluggify } from "./quartz/util/path"
-
-const CustomSlug: QuartzTransformerPlugin = () => ({
-  name: "CustomSlug",
-  markdownPlugins() {
-    return [
-      () => (_tree, file) => {
-        const customSlug = file.data.frontmatter?.permalink || file.data.frontmatter?.slug
-        if (typeof customSlug === "string" && customSlug.trim() !== "") {
-          file.data.slug = sluggify(customSlug) as FullSlug
-        }
-      },
-    ]
-  },
-})
-
 import { QuartzConfig } from "./quartz/cfg"
 import * as Plugin from "./quartz/plugins"
 
@@ -65,7 +48,6 @@ const config: QuartzConfig = {
   },
   plugins: {
     transformers: [
-      CustomSlug(),
       Plugin.HardLineBreaks(),
       Plugin.FrontMatter(),
       Plugin.CreatedModifiedDate({
