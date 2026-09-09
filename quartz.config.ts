@@ -1,5 +1,75 @@
 import { QuartzConfig } from "./quartz/cfg"
+import { QuartzTransformerPlugin } from "./quartz/plugins/types"
+import { FullSlug } from "./quartz/util/path"
 import * as Plugin from "./quartz/plugins"
+
+/**
+ * Custom transformer to set the canonical URL from `permalink` or `slug` frontmatter.
+ */
+const CanonicalSlug: QuartzTransformerPlugin = () => {
+  return {
+    name: "CanonicalSlug",
+    markdownPlugins() {
+      return [
+        () => (_tree, file) => {
+          const rawSlug =
+            file.data.frontmatter?.permalink ?? file.data.frontmatter?.slug
+
+          if (typeof rawSlug !== "string" || !rawSlug.trim()) {
+            return
+          }
+
+          // Strip extensions and normalize slashes
+          const clean = rawSlug.trim().replace(/\.(md|html)$/i, "")
+          let newSlug: FullSlug
+
+          if (clean === "/" || clean === "") {
+            newSlug = "index" as FullSlug
+          } else {
+            const normalized = clean
+              .replace(/^\/+|\/+$/g, "")
+              .split("/")
+              .map((seg) =>
+                seg
+                  .trim()
+                  .replace(/\s+/g, "-")
+                  .replace(/["'#?&%]/g, ""),
+              )
+              .filter(Boolean)
+              .join("/")
+
+            if (!normalized) return
+            newSlug = normalized as FullSlug
+          }
+
+          const originalSlug = file.data.slug
+
+          // 1. Promote to canonical slug
+          file.data.slug = newSlug
+
+          // 2. Delete permalink so AliasRedirects does not overwrite the real HTML with a redirect to itself
+          if (file.data.frontmatter?.permalink) {
+            delete file.data.frontmatter.permalink
+          }
+
+          // 3. Register the original disk path as an alias so backlinks/wikilinks still resolve
+          if (originalSlug && originalSlug !== newSlug && file.data.frontmatter) {
+            const existingAliases =
+              file.data.frontmatter.aliases ?? file.data.frontmatter.alias ?? []
+            const aliasList: string[] = Array.isArray(existingAliases)
+              ? [...existingAliases]
+              : [existingAliases]
+
+            if (!aliasList.includes(originalSlug)) {
+              aliasList.push(originalSlug)
+            }
+            file.data.frontmatter.aliases = aliasList
+          }
+        },
+      ]
+    },
+  }
+}
 
 const config: QuartzConfig = {
   configuration: {
@@ -13,7 +83,6 @@ const config: QuartzConfig = {
     ignorePatterns: ["assets/*.md", "drafts", "temp", "private", "plugins", ".obsidian"],
     defaultDateType: "published",
     theme: {
-      // fontOrigin: "googleFonts",
       cdnCaching: true,
       typography: {
         header: "sans-serif",
@@ -50,6 +119,7 @@ const config: QuartzConfig = {
     transformers: [
       Plugin.HardLineBreaks(),
       Plugin.FrontMatter(),
+      CanonicalSlug(), // <--- Placed right after FrontMatter is parsed
       Plugin.CreatedModifiedDate({
         priority: ["frontmatter", "git", "filesystem"],
       }),
@@ -90,7 +160,6 @@ const config: QuartzConfig = {
       Plugin.Static(),
       Plugin.Favicon(),
       Plugin.NotFoundPage(),
-      // Plugin.CustomOgImages(),
     ],
   },
 }
