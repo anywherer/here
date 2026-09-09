@@ -1,0 +1,14 @@
+{
+  "readableLineLength": true,
+  "strictLineBreaks": false,
+  "showLineNumber": false,
+  "tabSize": 2,
+  "userIgnoreFilters": [],
+  "attachmentFolderPath": "./assets",
+  "showUnsupportedFiles": true,
+  "newFileLocation": "current",
+  "showInlineTitle": true,
+  "promptDelete": false,
+  "alwaysUpdateLinks": true,
+  "spellcheck": false
+}

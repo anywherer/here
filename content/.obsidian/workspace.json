@@ -1,0 +1,206 @@
+{
+  "main": {
+    "id": "6cf375c2359876b5",
+    "type": "split",
+    "children": [
+      {
+        "id": "f1cf7aa462751328",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "71d8080f80b6daab",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "7b24fbbcc8ae57f1",
+    "type": "split",
+    "children": [
+      {
+        "id": "0cae1cad586c9d09",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "4f757cd1428ec5ce",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "8b793947cfd4d952",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "326e1065bbc28462",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "0dac6e5d552e2afc",
+    "type": "split",
+    "children": [
+      {
+        "id": "ce0f033b34b47082",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3121bfd4073a5be8",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "8555fe57020535f6",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "b12518f56b1d3eec",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "ca524878d0ce5cba",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false,
+      "omnisearch:Omnisearch": false,
+      "obsidian-excalidraw-plugin:Create new drawing": false
+    }
+  },
+  "active": "71d8080f80b6daab",
+  "lastOpenFiles": [
+    "plugins/excalidraw/template.excalidraw.md",
+    "01 front door/contact.md",
+    "02 on my writing desk/to give AI a childhood we didn't have.md",
+    "03 atop a pile of plushies on the bed/what if you are everyone.md",
+    "03 atop a pile of plushies on the bed/sometimes.md",
+    "03 atop a pile of plushies on the bed/roleplay.md",
+    "03 atop a pile of plushies on the bed/friendship.md",
+    "03 atop a pile of plushies on the bed/double life.md",
+    "03 atop a pile of plushies on the bed/alone.md",
+    "04 in the bedside table/who are you.md",
+    "04 in the bedside table/nothing bad ever happens here.md",
+    "05 under the rug/anti-advice.md",
+    "04 in the bedside table/write drunk, edit sober.md",
+    "07 within a small trinket box/timing.md",
+    "05 under the rug/deja vu.md",
+    "05 under the rug/autopilot.md",
+    "05 under the rug/body language.md",
+    "05 under the rug/tranquil life.md",
+    "drafts/songs.md",
+    "06 beside the picnic bench/strawberry day.md",
+    "06 beside the picnic bench/sun exposure.md",
+    "06 beside the picnic bench/walk slowly.md",
+    "06 beside the picnic bench/wet sand.md",
+    "07 within a small trinket box/i have no idea what you're doing.md",
+    "07 within a small trinket box/streak.md",
+    "drafts/examine life.md",
+    "07 within a small trinket box",
+    "05 under the rug",
+    "06 beside the picnic bench",
+    "04 in the bedside table",
+    "02 on my writing desk",
+    "01 front door",
+    "03 atop a pile of plushies on the bed"
+  ]
+}

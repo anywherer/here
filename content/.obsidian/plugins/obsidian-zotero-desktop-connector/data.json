@@ -1,0 +1,23 @@
+{
+  "database": "Zotero",
+  "noteImportFolder": "",
+  "pdfExportImageDPI": 120,
+  "pdfExportImageFormat": "jpg",
+  "pdfExportImageQuality": 90,
+  "citeFormats": [
+    {
+      "name": "mycite",
+      "format": "template",
+      "template": "{{ url }} + {{ title }} + {{ abstractNote }}"
+    },
+    {
+      "name": "unimelb format biblio",
+      "format": "formatted-bibliography",
+      "cslStyle": "harvard-the-university-of-melbourne"
+    }
+  ],
+  "exportFormats": [],
+  "citeSuggestTemplate": "[[{{citekey}}]]",
+  "openNoteAfterImport": false,
+  "whichNotesToOpenAfterImport": "first-imported-note"
+}
