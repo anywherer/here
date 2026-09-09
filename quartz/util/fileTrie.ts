@@ -39,11 +39,11 @@ export class FileTrieNode<T extends FileTrieData = ContentDetails> {
   }
 
   get slug(): FullSlug {
-    const path = joinSegments(...this.slugSegments) as FullSlug
-    if (this.isFolder) {
-      return joinSegments(path, "index") as FullSlug
+    // If this node represents a real file, use its actual canonical permalink slug
+    if (this.data?.slug) {
+      return this.data.slug as FullSlug
     }
-
+    return joinSegments(...this.slugSegments) as FullSlug
     return path
   }
 
@@ -84,23 +84,19 @@ export class FileTrieNode<T extends FileTrieData = ContentDetails> {
     }
   }
 
-// Add new file to trie
-  add(file: T) {
+add(file: T) {
     let pathSegments = file.slug.split("/")
 
-    // If filePath is available, use the physical disk folders for the explorer tree
-    // while keeping file.slug for the actual link URL
     const rawPath = (file as any).filePath as string | undefined
     if (rawPath) {
       const normalizedPath = rawPath.replace(/\\/g, "/")
       const cleanPath = normalizedPath
-        .replace(/^content\//i, "") // strip "content/"
-        .replace(/\.md$/i, "")      // strip ".md"
+        .replace(/^content\//i, "")
+        .replace(/\.md$/i, "")
 
       const folderSegments = cleanPath.split("/").slice(0, -1)
 
       if (folderSegments.length > 0) {
-        // Keep the note's custom slug/name as the leaf, nested under its disk folders
         const fileSegment = pathSegments[pathSegments.length - 1]
         pathSegments = [...folderSegments, fileSegment]
       }
