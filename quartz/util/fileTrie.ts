@@ -39,11 +39,11 @@ export class FileTrieNode<T extends FileTrieData = ContentDetails> {
   }
 
   get slug(): FullSlug {
-    // If this node represents a real file, use its actual canonical permalink slug
-    if (this.data?.slug) {
-      return this.data.slug as FullSlug
+    const path = joinSegments(...this.slugSegments) as FullSlug
+    if (this.isFolder) {
+      return joinSegments(path, "index") as FullSlug
     }
-    return joinSegments(...this.slugSegments) as FullSlug
+
     return path
   }
 
@@ -84,25 +84,9 @@ export class FileTrieNode<T extends FileTrieData = ContentDetails> {
     }
   }
 
-add(file: T) {
-    let pathSegments = file.slug.split("/")
-
-    const rawPath = (file as any).filePath as string | undefined
-    if (rawPath) {
-      const normalizedPath = rawPath.replace(/\\/g, "/")
-      const cleanPath = normalizedPath
-        .replace(/^content\//i, "")
-        .replace(/\.md$/i, "")
-
-      const folderSegments = cleanPath.split("/").slice(0, -1)
-
-      if (folderSegments.length > 0) {
-        const fileSegment = pathSegments[pathSegments.length - 1]
-        pathSegments = [...folderSegments, fileSegment]
-      }
-    }
-
-    this.insert(pathSegments, file)
+  // Add new file to trie
+  add(file: T) {
+    this.insert(file.slug.split("/"), file)
   }
 
   findNode(path: string[]): FileTrieNode<T> | undefined {
