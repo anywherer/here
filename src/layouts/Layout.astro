@@ -1,0 +1,82 @@
+---
+import Explorer from '../components/Explorer.astro';
+import Search from '../components/Search.astro';
+
+interface Props {
+  title?: string;
+}
+const { title = "here ♡" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <div class="site-container">
+      <aside class="sidebar">
+        <header>
+          <a href="/" class="brand">here ♡</a>
+        </header>
+        <Search />
+        <Explorer />
+      </aside>
+      <main class="content">
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>
+
+<style is:global>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1a1a1a;
+    background: #ffffff;
+    line-height: 1.6;
+  }
+  .site-container {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding: 2rem;
+    gap: 3rem;
+  }
+  .brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-decoration: none;
+    color: #0f4c81;
+    display: inline-block;
+    margin-bottom: 1.5rem;
+  }
+  .search-placeholder input {
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #e5e7eb;
+    background: #f3f4f6;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+  }
+  /* Tag Badges */
+  .tag-badge {
+    display: inline-block;
+    background: #e6f4f1;
+    color: #0d685c;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    margin-left: 0.25rem;
+  }
+  .tag-badge:hover {
+    background: #ccebe5;
+  }
+</style>

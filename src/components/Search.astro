@@ -1,0 +1,149 @@
+---
+import { getCollection } from 'astro:content';
+import { getPostMetadata, isPublished } from '../utils';
+
+const posts = await getCollection('posts', isPublished);
+
+const items = posts.map((post) => {
+  const meta = getPostMetadata(post);
+  // Safely grab body text across Astro versions
+  const bodyText = post.body || (post as any).rawContent?.() || '';
+  
+  return {
+    title: meta.title,
+    slug: meta.slug,
+    folder: meta.folder,
+    desc: post.data.description || '',
+    body: bodyText.replace(/---[\s\S]*?---/, '').replace(/[#*`]/g, ''),
+  };
+});
+---
+
+<div class="search-box">
+  <input id="search-input" type="search" placeholder="Search notes..." autocomplete="off" />
+  <div id="search-results" class="results-box"></div>
+</div>
+
+<script define:vars={{ items }}>
+  const input = document.getElementById('search-input');
+  const results = document.getElementById('search-results');
+
+  input?.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    
+    if (!q) {
+      results.innerHTML = '';
+      return;
+    }
+
+    const matches = items.filter((item) =>
+      item.title.toLowerCase().includes(q) ||
+      item.desc.toLowerCase().includes(q) ||
+      item.body.toLowerCase().includes(q)
+    );
+
+    if (matches.length === 0) {
+      results.innerHTML = `<div class="no-res">No matches found</div>`;
+      return;
+    }
+
+    results.innerHTML = matches.slice(0, 6).map((item) => {
+      let matchType = 'title';
+      let snippet = '';
+
+      const t = item.title.toLowerCase();
+      const d = item.desc.toLowerCase();
+      const b = item.body.toLowerCase();
+
+      if (t.includes(q)) {
+        matchType = 'title';
+      } else if (d.includes(q)) {
+        matchType = 'description';
+        const idx = d.indexOf(q);
+        snippet = '…' + item.desc.slice(Math.max(0, idx - 20), idx + q.length + 30) + '…';
+      } else if (b.includes(q)) {
+        matchType = 'content';
+        const idx = b.indexOf(q);
+        snippet = '…' + item.body.slice(Math.max(0, idx - 20), idx + q.length + 30) + '…';
+      }
+
+      return `
+        <a href="/${item.slug}" class="item-link">
+          <div class="item-head">
+            <span class="title">${item.title}</span>
+            <span class="badge">${matchType}</span>
+          </div>
+          ${snippet ? `<div class="snippet">${snippet}</div>` : ''}
+        </a>
+      `;
+    }).join('');
+  });
+</script>
+
+<style>
+  .search-box {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+  #search-input {
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    outline: none;
+  }
+  #search-input:focus {
+    background: #ffffff;
+    border-color: #0284c7;
+  }
+  .results-box {
+    margin-top: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .item-link {
+    display: block;
+    padding: 0.45rem 0.55rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .item-link:hover {
+    background: #f0fdf4;
+    border-color: #86efac;
+  }
+  .item-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #0369a1;
+  }
+  .badge {
+    font-size: 0.65rem;
+    background: #e2e8f0;
+    color: #475569;
+    padding: 0.05rem 0.3rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+  .snippet {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.2rem;
+  }
+  .no-res {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    padding: 0.4rem 0.2rem;
+  }
+</style>
