@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from 'astro:transitions';
 import Explorer from '../components/Explorer.astro';
 import Search from '../components/Search.astro';
 
@@ -14,6 +15,7 @@ const { title = "here ♡" } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
+    <ClientRouter />
   </head>
   <body>
     <div class="site-container">
