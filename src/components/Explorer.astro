@@ -1,6 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-import { getPostMetadata, isPublished, slugify } from '../utils';
+import { getPostMetadata, isPublished } from '../utils';
 
 interface TreeNode {
   name: string;
@@ -11,7 +11,6 @@ interface TreeNode {
 
 const allPosts = await getCollection('posts', isPublished);
 
-// 1. Build a recursive tree from post.id paths
 const root: TreeNode = {
   name: 'root',
   path: '',
@@ -21,9 +20,8 @@ const root: TreeNode = {
 
 for (const post of allPosts) {
   const { title, slug } = getPostMetadata(post);
-  // Split path: "03 bed/corner/plushie.md" -> ["03 bed", "corner", "plushie.md"]
   const parts = post.id.split('/');
-  parts.pop(); // Remove filename, remaining parts are folder segments
+  parts.pop();
 
   let current = root;
   let accumulatedPath = '';
@@ -45,16 +43,17 @@ for (const post of allPosts) {
   current.files.push({ title, slug });
 }
 
-// 2. Recursive function to generate nested <details><summary> HTML
 function renderTree(node: TreeNode): string {
   let html = '';
 
-  // Sort subfolders alphabetically/numerically (e.g. 01, 02, 03...)
   const sortedFolders = Array.from(node.folders.keys()).sort();
   for (const folderName of sortedFolders) {
     const subFolder = node.folders.get(folderName)!;
+    
+    // 1. Removed `open` (collapsed by default)
+    // 2. Added data-path as a unique storage key
     html += `
-      <details open class="folder-group">
+      <details class="folder-group" data-path="${encodeURIComponent(subFolder.path)}">
         <summary class="folder-summary">
           <span class="folder-arrow">▾</span>
           <span class="folder-name">${subFolder.name}</span>
@@ -66,14 +65,14 @@ function renderTree(node: TreeNode): string {
     `;
   }
 
-  // Sort notes alphabetically
   const sortedFiles = node.files.sort((a, b) => a.title.localeCompare(b.title));
   if (sortedFiles.length > 0) {
     html += `<ul class="file-list">`;
     for (const file of sortedFiles) {
+      // Added trailing slash to prevent 301 redirects
       html += `
         <li class="file-item">
-          <a href="/${file.slug}" class="file-link">${file.title}</a>
+          <a href="/${file.slug}/" class="file-link">${file.title}</a>
         </li>
       `;
     }
@@ -86,13 +85,104 @@ function renderTree(node: TreeNode): string {
 const treeHtml = renderTree(root);
 ---
 
-<nav class="explorer">
+<nav-explorer class="explorer">
   <div class="explorer-header">Explorer ▾</div>
   <div class="explorer-tree" set:html={treeHtml} />
-</nav>
+</nav-explorer>
+
+<script>
+  const STORAGE_KEY = 'astro_explorer_open_folders';
+
+  class NavExplorer extends HTMLElement {
+    private openFolders = new Set<string>();
+
+    connectedCallback() {
+      this.loadSavedState();
+      this.restoreOpenFolders();
+      this.highlightAndExpandActivePage();
+
+      // Listen to toggles (using capture phase because 'toggle' does not bubble)
+      this.addEventListener('toggle', this.handleToggle, true);
+    }
+
+    disconnectedCallback() {
+      this.removeEventListener('toggle', this.handleToggle, true);
+    }
+
+    private loadSavedState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        this.openFolders = new Set(raw ? JSON.parse(raw) : []);
+      } catch {
+        this.openFolders = new Set();
+      }
+    }
+
+    private saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(this.openFolders)));
+      } catch (err) {
+        console.error('Failed to save explorer state', err);
+      }
+    }
+
+    private restoreOpenFolders() {
+      const detailsList = this.querySelectorAll<HTMLDetailsElement>('details.folder-group');
+      for (const details of detailsList) {
+        const path = details.dataset.path;
+        if (path && this.openFolders.has(path)) {
+          details.open = true;
+        }
+      }
+    }
+
+    // Auto-opens parent folders of current page so the user isn't lost
+    private highlightAndExpandActivePage() {
+      const currentPath = window.location.pathname;
+      const links = this.querySelectorAll<HTMLAnchorElement>('.file-link');
+
+      for (const link of links) {
+        if (link.getAttribute('href') === currentPath) {
+          link.classList.add('active');
+
+          // Traverse up and open all parent folders of the active note
+          let parent = link.closest('details.folder-group');
+          while (parent) {
+            (parent as HTMLDetailsElement).open = true;
+            if (parent.dataset.path) {
+              this.openFolders.add(parent.dataset.path);
+            }
+            parent = parent.parentElement?.closest('details.folder-group') || null;
+          }
+          this.saveState();
+          break;
+        }
+      }
+    }
+
+    private handleToggle = (e: Event) => {
+      const details = e.target as HTMLDetailsElement;
+      if (details.tagName !== 'DETAILS' || !details.dataset.path) return;
+
+      const path = details.dataset.path;
+      if (details.open) {
+        this.openFolders.add(path);
+      } else {
+        this.openFolders.delete(path);
+      }
+
+      this.saveState();
+    };
+  }
+
+  if (!customElements.get('nav-explorer')) {
+    customElements.define('nav-explorer', NavExplorer);
+  }
+</script>
 
 <style is:global>
-  .explorer {
+  nav-explorer.explorer {
+    display: block;
     font-size: 0.88rem;
     user-select: none;
   }
@@ -118,7 +208,7 @@ const treeHtml = renderTree(root);
     border-radius: 4px;
     color: #334155;
     font-weight: 500;
-    list-style: none; /* Hide default browser triangle */
+    list-style: none;
     transition: background 0.1s ease;
   }
   .folder-summary::-webkit-details-marker {
@@ -171,5 +261,12 @@ const treeHtml = renderTree(root);
     background: #f8fafc;
     color: #0284c7;
     text-decoration: none;
+  }
+
+  /* Active Note Highlight */
+  .file-link.active {
+    background: #e0f2fe;
+    color: #0284c7;
+    font-weight: 600;
   }
 </style>
