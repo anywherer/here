@@ -43,12 +43,24 @@ const { title = "here ♡" } = Astro.props;
   }
   .site-container {
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 1fr 280px;
+    grid-template-areas: "content sidebar";
     max-width: 1200px;
     margin: 0 auto;
     min-height: 100vh;
     padding: 2rem;
     gap: 3rem;
+  }
+  .sidebar { grid-area: sidebar; }
+  .content { grid-area: content; }
+  @media (max-width: 800px) {
+    .site-container {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "content"
+        "sidebar";
+      gap: 1.5rem;
+    }
   }
   .brand {
     font-size: 1.5rem;
