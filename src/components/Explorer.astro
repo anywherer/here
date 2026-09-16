@@ -72,7 +72,7 @@ function renderTree(node: TreeNode): string {
       // Added trailing slash to prevent 301 redirects
       html += `
         <li class="file-item">
-          <a href="/${file.slug}/" class="file-link">${file.title}</a>
+          <a href="/${file.slug}" class="file-link">${file.title}</a>
         </li>
       `;
     }

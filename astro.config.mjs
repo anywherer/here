@@ -4,7 +4,7 @@ import { defineConfig } from 'astro/config';
 export default defineConfig({
   site: 'https://somewherer.com',
   scopedStyleStrategy: 'where',
-  trailingSlash: 'always',
+  trailingSlash: 'never',
   prefetch: {
     prefetchAll: false,
     defaultStrategy: 'hover',
