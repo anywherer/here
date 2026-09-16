@@ -3,73 +3,54 @@ import { getCollection } from 'astro:content';
 import { getPostMetadata, isPublished } from '../utils';
 
 interface TreeNode {
-  name: string;
-  path: string;
   folders: Map<string, TreeNode>;
   files: Array<{ title: string; slug: string }>;
 }
 
 const allPosts = await getCollection('posts', isPublished);
 
-const root: TreeNode = {
-  name: 'root',
-  path: '',
-  folders: new Map(),
-  files: [],
-};
+const root: TreeNode = { folders: new Map(), files: [] };
 
 for (const post of allPosts) {
   const { title, slug } = getPostMetadata(post);
   const parts = post.id.split('/');
-  parts.pop();
+  parts.pop(); // Remove filename
 
   let current = root;
-  let accumulatedPath = '';
-
   for (const segment of parts) {
-    accumulatedPath = accumulatedPath ? `${accumulatedPath}/${segment}` : segment;
-
     if (!current.folders.has(segment)) {
-      current.folders.set(segment, {
-        name: segment,
-        path: accumulatedPath,
-        folders: new Map(),
-        files: [],
-      });
+      current.folders.set(segment, { folders: new Map(), files: [] });
     }
     current = current.folders.get(segment)!;
   }
-
   current.files.push({ title, slug });
 }
 
-function renderTree(node: TreeNode): string {
+function renderTree(node: TreeNode, path = ''): string {
   let html = '';
 
-  const sortedFolders = Array.from(node.folders.keys()).sort();
-  for (const folderName of sortedFolders) {
-    const subFolder = node.folders.get(folderName)!;
-    
-    // 1. Removed `open` (collapsed by default)
-    // 2. Added data-path as a unique storage key
+  // Sort and render folders (collapsed by default: no `open` attribute)
+  const sortedFolders = Array.from(node.folders.entries()).sort(([a], [b]) => a.localeCompare(b));
+  for (const [name, subFolder] of sortedFolders) {
+    const folderPath = path ? `${path}/${name}` : name;
     html += `
-      <details class="folder-group" data-path="${encodeURIComponent(subFolder.path)}">
+      <details class="folder-group" data-path="${folderPath}">
         <summary class="folder-summary">
           <span class="folder-arrow">▾</span>
-          <span class="folder-name">${subFolder.name}</span>
+          <span class="folder-name">${name}</span>
         </summary>
         <div class="folder-children">
-          ${renderTree(subFolder)}
+          ${renderTree(subFolder, folderPath)}
         </div>
       </details>
     `;
   }
 
+  // Sort and render files (NO trailing slash on links)
   const sortedFiles = node.files.sort((a, b) => a.title.localeCompare(b.title));
   if (sortedFiles.length > 0) {
     html += `<ul class="file-list">`;
     for (const file of sortedFiles) {
-      // Added trailing slash to prevent 301 redirects
       html += `
         <li class="file-item">
           <a href="/${file.slug}" class="file-link">${file.title}</a>
@@ -91,88 +72,28 @@ const treeHtml = renderTree(root);
 </nav-explorer>
 
 <script>
-  const STORAGE_KEY = 'astro_explorer_open_folders';
-
   class NavExplorer extends HTMLElement {
-    private openFolders = new Set<string>();
-
     connectedCallback() {
-      this.loadSavedState();
-      this.restoreOpenFolders();
-      this.highlightAndExpandActivePage();
+      const KEY = 'open-folders';
+      const openFolders = new Set(JSON.parse(localStorage.getItem(KEY) || '[]'));
 
-      // Listen to toggles (using capture phase because 'toggle' does not bubble)
-      this.addEventListener('toggle', this.handleToggle, true);
+      // 1. Restore previously opened folders
+      this.querySelectorAll<HTMLDetailsElement>('details[data-path]').forEach((el) => {
+        if (openFolders.has(el.dataset.path)) el.open = true;
+      });
+
+      // 2. Save toggle states (capture phase captures unbubbled 'toggle' events)
+      this.addEventListener('toggle', (e) => {
+        const el = e.target as HTMLDetailsElement;
+        const path = el.dataset.path;
+        if (!path) return;
+
+        if (el.open) openFolders.add(path);
+        else openFolders.delete(path);
+
+        localStorage.setItem(KEY, JSON.stringify([...openFolders]));
+      }, true);
     }
-
-    disconnectedCallback() {
-      this.removeEventListener('toggle', this.handleToggle, true);
-    }
-
-    private loadSavedState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        this.openFolders = new Set(raw ? JSON.parse(raw) : []);
-      } catch {
-        this.openFolders = new Set();
-      }
-    }
-
-    private saveState() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(this.openFolders)));
-      } catch (err) {
-        console.error('Failed to save explorer state', err);
-      }
-    }
-
-    private restoreOpenFolders() {
-      const detailsList = this.querySelectorAll<HTMLDetailsElement>('details.folder-group');
-      for (const details of detailsList) {
-        const path = details.dataset.path;
-        if (path && this.openFolders.has(path)) {
-          details.open = true;
-        }
-      }
-    }
-
-    // Auto-opens parent folders of current page so the user isn't lost
-    private highlightAndExpandActivePage() {
-      const currentPath = window.location.pathname;
-      const links = this.querySelectorAll<HTMLAnchorElement>('.file-link');
-
-      for (const link of links) {
-        if (link.getAttribute('href') === currentPath) {
-          link.classList.add('active');
-
-          // Traverse up and open all parent folders of the active note
-          let parent = link.closest('details.folder-group');
-          while (parent) {
-            (parent as HTMLDetailsElement).open = true;
-            if (parent.dataset.path) {
-              this.openFolders.add(parent.dataset.path);
-            }
-            parent = parent.parentElement?.closest('details.folder-group') || null;
-          }
-          this.saveState();
-          break;
-        }
-      }
-    }
-
-    private handleToggle = (e: Event) => {
-      const details = e.target as HTMLDetailsElement;
-      if (details.tagName !== 'DETAILS' || !details.dataset.path) return;
-
-      const path = details.dataset.path;
-      if (details.open) {
-        this.openFolders.add(path);
-      } else {
-        this.openFolders.delete(path);
-      }
-
-      this.saveState();
-    };
   }
 
   if (!customElements.get('nav-explorer')) {
@@ -194,8 +115,6 @@ const treeHtml = renderTree(root);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
-
-  /* Folder groups */
   .folder-group {
     margin-bottom: 0.25rem;
   }
@@ -218,8 +137,6 @@ const treeHtml = renderTree(root);
     background: #f1f5f9;
     color: #0369a1;
   }
-
-  /* Arrow rotation */
   .folder-arrow {
     display: inline-block;
     font-size: 0.75rem;
@@ -231,15 +148,11 @@ const treeHtml = renderTree(root);
   details:not([open]) > .folder-summary .folder-arrow {
     transform: rotate(-90deg);
   }
-
-  /* Obsidian-style Tree Indent Guide Lines */
   .folder-children {
     padding-left: 0.75rem;
     margin-left: 0.5rem;
     border-left: 1.5px solid #e2e8f0;
   }
-
-  /* File Lists */
   .file-list {
     list-style: none;
     padding: 0;
@@ -260,13 +173,5 @@ const treeHtml = renderTree(root);
   .file-link:hover {
     background: #f8fafc;
     color: #0284c7;
-    text-decoration: none;
-  }
-
-  /* Active Note Highlight */
-  .file-link.active {
-    background: #e0f2fe;
-    color: #0284c7;
-    font-weight: 600;
   }
 </style>
