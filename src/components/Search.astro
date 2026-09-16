@@ -1,149 +1,307 @@
----
-import { getCollection } from 'astro:content';
-import { getPostMetadata, isPublished } from '../utils';
+<search-box>
+  <div class="search-box">
+    <div class="input-wrapper">
+      <input
+        class="search-input"
+        type="search"
+        placeholder="Search notes... (Press '/' to focus)"
+        autocomplete="off"
+        spellcheck="false"
+        aria-label="Search notes"
+        aria-expanded="false"
+        aria-controls="search-results"
+      />
+      <span class="search-spinner" aria-hidden="true"></span>
+    </div>
 
-const posts = await getCollection('posts', isPublished);
+    <div id="search-results" class="results-box" role="region" aria-live="polite"></div>
+  </div>
+</search-box>
 
-const items = posts.map((post) => {
-  const meta = getPostMetadata(post);
-  // Safely grab body text across Astro versions
-  const bodyText = post.body || (post as any).rawContent?.() || '';
-  
-  return {
-    title: meta.title,
-    slug: meta.slug,
-    folder: meta.folder,
-    desc: post.data.description || '',
-    body: bodyText.replace(/---[\s\S]*?---/, '').replace(/[#*`]/g, ''),
-  };
-});
----
+<script>
+  interface SearchItem {
+    title: string;
+    slug: string;
+    desc: string;
+    body: string;
+  }
 
-<div class="search-box">
-  <input id="search-input" type="search" placeholder="Search notes..." autocomplete="off" />
-  <div id="search-results" class="results-box"></div>
-</div>
+  // Module-level cache: survives Astro ClientRouter page transitions!
+  let cachedIndex: SearchItem[] | null = null;
+  let fetchPromise: Promise<SearchItem[]> | null = null;
 
-<script define:vars={{ items }}>
-  const input = document.getElementById('search-input');
-  const results = document.getElementById('search-results');
+  async function loadSearchIndex(): Promise<SearchItem[]> {
+    if (cachedIndex) return cachedIndex;
 
-  input?.addEventListener('input', () => {
-    const q = input.value.trim().toLowerCase();
-    
-    if (!q) {
-      results.innerHTML = '';
-      return;
+    if (!fetchPromise) {
+      fetchPromise = fetch('/search.json')
+        .then((res) => {
+          if (!res.ok) throw new Error('Failed to load search index');
+          return res.json();
+        })
+        .then((data) => {
+          cachedIndex = data;
+          return data;
+        })
+        .catch((err) => {
+          console.error(err);
+          fetchPromise = null;
+          return [];
+        });
     }
 
-    const matches = items.filter((item) =>
-      item.title.toLowerCase().includes(q) ||
-      item.desc.toLowerCase().includes(q) ||
-      item.body.toLowerCase().includes(q)
-    );
+    return fetchPromise;
+  }
 
-    if (matches.length === 0) {
-      results.innerHTML = `<div class="no-res">No matches found</div>`;
-      return;
+  class SearchBox extends HTMLElement {
+    private input!: HTMLInputElement;
+    private resultsBox!: HTMLElement;
+    private debounceTimer?: number;
+    private abortController?: AbortController;
+
+    connectedCallback() {
+      this.input = this.querySelector('.search-input')!;
+      this.resultsBox = this.querySelector('.results-box')!;
+      this.abortController = new AbortController();
+      const { signal } = this.abortController;
+
+      // 1. Prefetch index as soon as user hovers or focuses
+      const prefetch = () => loadSearchIndex();
+      this.input.addEventListener('focus', prefetch, { once: true, signal });
+      this.input.addEventListener('pointerenter', prefetch, { once: true, signal });
+
+      // 2. Debounced search input
+      this.input.addEventListener(
+        'input',
+        () => {
+          window.clearTimeout(this.debounceTimer);
+          this.debounceTimer = window.setTimeout(() => this.handleSearch(), 120);
+        },
+        { signal }
+      );
+
+      // 3. Escape key to clear & close
+      this.input.addEventListener(
+        'keydown',
+        (e) => {
+          if (e.key === 'Escape') {
+            this.clearResults();
+            this.input.blur();
+          }
+        },
+        { signal }
+      );
+
+      // 4. Click outside to dismiss
+      document.addEventListener(
+        'pointerdown',
+        (e) => {
+          if (!this.contains(e.target as Node)) {
+            this.clearResults();
+          }
+        },
+        { signal }
+      );
+
+      // 5. Global '/' shortcut to focus search
+      window.addEventListener(
+        'keydown',
+        (e) => {
+          if (
+            e.key === '/' &&
+            document.activeElement !== this.input &&
+            !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName || '')
+          ) {
+            e.preventDefault();
+            this.input.focus();
+          }
+        },
+        { signal }
+      );
     }
 
-    results.innerHTML = matches.slice(0, 6).map((item) => {
-      let matchType = 'title';
-      let snippet = '';
+    disconnectedCallback() {
+      // Cleans up event listeners automatically when ClientRouter removes this page
+      this.abortController?.abort();
+      window.clearTimeout(this.debounceTimer);
+    }
 
-      const t = item.title.toLowerCase();
-      const d = item.desc.toLowerCase();
-      const b = item.body.toLowerCase();
+    private clearResults() {
+      this.resultsBox.innerHTML = '';
+      this.input.setAttribute('aria-expanded', 'false');
+    }
 
-      if (t.includes(q)) {
-        matchType = 'title';
-      } else if (d.includes(q)) {
-        matchType = 'description';
-        const idx = d.indexOf(q);
-        snippet = '…' + item.desc.slice(Math.max(0, idx - 20), idx + q.length + 30) + '…';
-      } else if (b.includes(q)) {
-        matchType = 'content';
-        const idx = b.indexOf(q);
-        snippet = '…' + item.body.slice(Math.max(0, idx - 20), idx + q.length + 30) + '…';
+    private async handleSearch() {
+      const q = this.input.value.trim().toLowerCase();
+
+      if (!q) {
+        this.clearResults();
+        return;
       }
 
-      return `
-        <a href="/${item.slug}" class="item-link">
-          <div class="item-head">
-            <span class="title">${item.title}</span>
-            <span class="badge">${matchType}</span>
-          </div>
-          ${snippet ? `<div class="snippet">${snippet}</div>` : ''}
-        </a>
-      `;
-    }).join('');
-  });
+      this.classList.add('loading');
+      const items = await loadSearchIndex();
+      this.classList.remove('loading');
+
+      const matches = items.filter(
+        (item) =>
+          item.title.toLowerCase().includes(q) ||
+          item.desc.toLowerCase().includes(q) ||
+          item.body.toLowerCase().includes(q)
+      );
+
+      if (matches.length === 0) {
+        this.resultsBox.innerHTML = `<div class="no-res">No matches found for "<strong>${this.escapeHTML(q)}</strong>"</div>`;
+        this.input.setAttribute('aria-expanded', 'true');
+        return;
+      }
+
+      this.resultsBox.innerHTML = matches
+        .slice(0, 6)
+        .map((item) => {
+          let matchType: 'title' | 'description' | 'content' = 'title';
+          let snippet = '';
+
+          const t = item.title.toLowerCase();
+          const d = item.desc.toLowerCase();
+          const b = item.body.toLowerCase();
+
+          if (t.includes(q)) {
+            matchType = 'title';
+          } else if (d.includes(q)) {
+            matchType = 'description';
+            const idx = d.indexOf(q);
+            snippet = this.createSnippet(item.desc, idx, q.length);
+          } else if (b.includes(q)) {
+            matchType = 'content';
+            const idx = b.indexOf(q);
+            snippet = this.createSnippet(item.body, idx, q.length);
+          }
+
+          return `
+            <a href="/${item.slug}" class="item-link">
+              <div class="item-head">
+                <span class="title">${this.escapeHTML(item.title)}</span>
+                <span class="badge ${matchType}">${matchType}</span>
+              </div>
+              ${snippet ? `<div class="snippet">${snippet}</div>` : ''}
+            </a>
+          `;
+        })
+        .join('');
+
+      this.input.setAttribute('aria-expanded', 'true');
+    }
+
+    private createSnippet(text: string, index: number, queryLen: number): string {
+      const start = Math.max(0, index - 25);
+      const end = Math.min(text.length, index + queryLen + 40);
+      const raw = (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '');
+      return this.escapeHTML(raw);
+    }
+
+    private escapeHTML(str: string): string {
+      return str.replace(/[&<>'"]/g, 
+        (tag) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+  }
+
+  // Register only once
+  if (!customElements.get('search-box')) {
+    customElements.define('search-box', SearchBox);
+  }
 </script>
 
 <style>
-  .search-box {
+  search-box {
+    display: block;
     position: relative;
     margin-bottom: 1.5rem;
   }
-  #search-input {
-    width: 100%;
-    padding: 0.45rem 0.6rem;
-    border: 1px solid #e5e7eb;
-    background: #f9fafb;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    outline: none;
+  .search-box {
+    position: relative;
   }
-  #search-input:focus {
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .search-input {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.15s ease;
+  }
+  .search-input:focus {
     background: #ffffff;
     border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
   }
   .results-box {
-    margin-top: 0.4rem;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 50;
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  }
+  .results-box:empty {
+    display: none;
   }
   .item-link {
     display: block;
-    padding: 0.45rem 0.55rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid transparent;
     border-radius: 6px;
     text-decoration: none;
     color: inherit;
+    transition: background 0.1s ease;
   }
   .item-link:hover {
-    background: #f0fdf4;
-    border-color: #86efac;
+    background: #f0f9ff;
+    border-color: #bae6fd;
   }
   .item-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.5rem;
   }
   .title {
-    font-size: 0.85rem;
-    font-weight: 700;
+    font-size: 0.875rem;
+    font-weight: 600;
     color: #0369a1;
   }
   .badge {
     font-size: 0.65rem;
-    background: #e2e8f0;
-    color: #475569;
-    padding: 0.05rem 0.3rem;
-    border-radius: 3px;
+    font-weight: 600;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
     text-transform: uppercase;
   }
+  .badge.title { background: #e0f2fe; color: #0369a1; }
+  .badge.description { background: #fef3c7; color: #b45309; }
+  .badge.content { background: #f1f5f9; color: #475569; }
   .snippet {
-    font-size: 0.75rem;
+    font-size: 0.775rem;
     color: #64748b;
-    margin-top: 0.2rem;
+    margin-top: 0.25rem;
+    line-height: 1.4;
   }
   .no-res {
-    font-size: 0.8rem;
-    color: #94a3b8;
-    padding: 0.4rem 0.2rem;
+    font-size: 0.85rem;
+    color: #64748b;
+    padding: 0.75rem;
+    text-align: center;
   }
 </style>
