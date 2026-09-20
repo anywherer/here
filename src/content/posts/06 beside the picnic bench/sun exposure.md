@@ -3,10 +3,9 @@ title:
 description: 
 aliases: 
 tags:
-  - all
   - health
 created: 2024-11-07T19:24:33
-modified: 2026-09-09T21:42:36
+modified: 2026-09-16T14:23:44
 publish: true
 published: 2024-11-07
 permalink: sun exposure

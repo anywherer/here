@@ -3,11 +3,9 @@ title:
 description: 
 aliases: 
 tags:
-  - all
   - introspection
-  - life
 created: 2025-08-11T21:37:25
-modified: 2026-09-09T21:45:18
+modified: 2026-09-17T20:25:17
 publish: true
 published: 2025-08-11
 permalink: who are you

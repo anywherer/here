@@ -2,10 +2,9 @@
 title: 
 description: 
 aliases: 
-tags:
-  - all
+tags: 
 created: 2024-03-16T00:00:00
-modified: 2026-09-09T21:43:47
+modified: 2026-09-16T14:23:26
 publish: true
 published: 2024-03-16
 permalink: tranquil life

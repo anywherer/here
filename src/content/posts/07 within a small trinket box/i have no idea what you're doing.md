@@ -3,10 +3,10 @@ title:
 description: 
 aliases: 
 tags:
-  - all
   - poem
+  - tiny
 created: 2025-02-23T18:46:47
-modified: 2026-09-09T21:37:01
+modified: 2026-09-17T20:26:20
 publish: true
 published: 2025-02-23
 permalink: i have no idea what you're doing

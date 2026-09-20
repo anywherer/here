@@ -3,10 +3,10 @@ title:
 description: 
 aliases: 
 tags:
-  - all
   - mechanic
+  - tiny
 created: 2025-07-24T18:48:36
-modified: 2026-09-09T21:44:26
+modified: 2026-09-17T20:26:28
 publish: true
 published: 2025-07-24
 permalink: timing

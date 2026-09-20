@@ -2,11 +2,9 @@
 title: 
 description: 
 aliases: 
-tags:
-  - all
-  - life
+tags: 
 created: 2025-08-13T19:03:03
-modified: 2026-09-09T21:46:05
+modified: 2026-09-17T19:07:00
 publish: true
 published: 2025-08-13
 permalink: double life

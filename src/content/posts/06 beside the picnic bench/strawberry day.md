@@ -2,10 +2,9 @@
 title: 
 description: 
 aliases: 
-tags:
-  - all
+tags: 
 created: 2024-11-07T18:53:26
-modified: 2026-09-09T21:43:19
+modified: 2026-09-17T19:05:56
 publish: true
 published: 2024-11-07
 permalink: strawberry day

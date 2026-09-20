@@ -3,11 +3,10 @@ title:
 description: 
 aliases: 
 tags:
-  - all
-  - life
   - introspection
+  - health
 created: 2025-08-05T09:17:47
-modified: 2026-09-09T21:41:50
+modified: 2026-09-17T20:26:19
 publish: true
 published: 2025-08-23
 permalink: wet sand

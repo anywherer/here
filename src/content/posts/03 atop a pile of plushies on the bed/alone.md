@@ -2,11 +2,9 @@
 title: 
 description: 
 aliases: 
-tags:
-  - all
-  - introspection
+tags: 
 created: 2025-02-23T18:11:32
-modified: 2026-09-09T21:46:00
+modified: 2026-09-17T19:06:55
 publish: true
 published: 2025-02-23
 permalink: alone

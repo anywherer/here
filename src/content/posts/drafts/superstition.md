@@ -3,10 +3,9 @@ title:
 description: 
 aliases: 
 tags:
-  - all
   - mechanic
 created: 2025-03-16T09:21:11
-modified: 2025-12-14T19:09:49
+modified: 2026-09-16T18:29:01
 publish: false
 published: 2025-03-16
 permalink: 

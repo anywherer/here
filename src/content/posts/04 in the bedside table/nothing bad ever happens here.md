@@ -3,10 +3,9 @@ title:
 description: 
 aliases: 
 tags:
-  - all
   - extrospection
 created: 2024-11-06T19:05:11
-modified: 2026-09-09T21:44:04
+modified: 2026-09-17T20:25:11
 publish: true
 published: 2024-11-06
 permalink: nothing bad ever happens here

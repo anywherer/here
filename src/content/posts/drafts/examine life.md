@@ -3,10 +3,9 @@ title:
 description: 
 aliases: 
 tags:
-  - all
   - life
 created: 2025-08-14T14:43:09
-modified: 2026-09-09T21:32:17
+modified: 2026-09-16T18:29:09
 publish: false
 published: 2025-08-14
 permalink: 

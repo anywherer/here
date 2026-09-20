@@ -2,11 +2,9 @@
 title: 
 description: 
 aliases: 
-tags:
-  - all
-  - observation
+tags: 
 created: 2024-12-14T14:03:50
-modified: 2026-09-09T21:43:30
+modified: 2026-09-17T20:25:42
 publish: true
 published: 2025-08-11
 permalink: deja vu

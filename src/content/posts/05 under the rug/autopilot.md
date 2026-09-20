@@ -2,9 +2,10 @@
 title: 
 description: 
 aliases: 
-tags: 
+tags:
+  - mechanic
 created: 2025-10-08T14:28:52
-modified: 2026-09-09T21:42:29
+modified: 2026-09-17T20:25:30
 publish: true
 published: 2025-10-07
 permalink: autopilot

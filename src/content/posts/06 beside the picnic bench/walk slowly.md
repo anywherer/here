@@ -3,10 +3,9 @@ title:
 description: 
 aliases: 
 tags:
-  - all
-  - life
+  - health
 created: 2025-10-14T16:00:00
-modified: 2026-09-09T21:37:16
+modified: 2026-09-17T20:26:12
 publish: true
 published: 2025-10-14
 permalink: walk slowly

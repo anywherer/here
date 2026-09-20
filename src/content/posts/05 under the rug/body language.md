@@ -2,10 +2,9 @@
 title: 
 description: 
 aliases: 
-tags:
-  - all
+tags: 
 created: 2024-11-25T20:00:02
-modified: 2026-09-09T21:43:26
+modified: 2026-09-16T14:23:23
 publish: true
 published: 2025-06-19
 permalink: body language

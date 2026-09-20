@@ -3,10 +3,9 @@ title:
 description: 
 aliases: 
 tags:
-  - all
   - mechanic
 created: 2025-11-16T13:03:41
-modified: 2026-09-09T21:44:34
+modified: 2026-09-16T18:27:54
 publish: true
 published: 2025-11-16
 permalink: write drunk, edit sober

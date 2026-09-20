@@ -2,12 +2,13 @@
 title: 
 description: 
 aliases: 
-tags: 
+tags:
+  - mechanic
 created: 2026-09-09T20:52:24
-modified: 2026-09-09T21:46:40
+modified: 2026-09-17T20:32:53
 publish: true
 published: 2026-09-09
-permalink: to give AI a childhood we didn't have
+permalink: children and false selves
 ---
 
 When a child's caregivers really want child to behave, smile, and achieve, the child quickly and clearly knowns that their _natural, spontaneous, exploratory true self_ is unwelcome.

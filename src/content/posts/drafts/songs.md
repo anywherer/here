@@ -2,10 +2,9 @@
 title: 
 description: 
 aliases: 
-tags:
-  - all
+tags: 
 created: 2025-07-15T15:23:03
-modified: 2026-09-09T21:43:40
+modified: 2026-09-16T18:29:18
 publish: false
 published: 2025-07-15
 permalink: songs

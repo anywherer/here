@@ -3,10 +3,9 @@ title:
 description: 
 aliases: 
 tags:
-  - all
   - poem
 created: 2024-12-25T20:03:06
-modified: 2025-12-14T19:08:41
+modified: 2026-09-16T18:29:03
 publish: false
 published: 2024-06-21
 permalink: 

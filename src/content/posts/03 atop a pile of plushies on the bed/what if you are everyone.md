@@ -3,10 +3,9 @@ title:
 description: 
 aliases: 
 tags:
-  - all
   - theory
 created: 2024-11-25T19:40:02
-modified: 2026-09-09T21:45:27
+modified: 2026-09-16T18:29:31
 publish: true
 published: 2024-11-25
 permalink: what if you are everyone

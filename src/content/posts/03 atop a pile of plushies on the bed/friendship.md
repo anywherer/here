@@ -3,11 +3,9 @@ title:
 description: 
 aliases: 
 tags:
-  - all
   - mechanic
-  - life
 created: 2024-11-27T19:21:08
-modified: 2026-09-09T21:46:10
+modified: 2026-09-17T19:07:42
 publish: true
 published: 2025-08-12
 permalink: friendship
@@ -15,9 +13,8 @@ permalink: friendship
 
 I hope you're ready to get your thinking caps on: thinking about friendships is the most important thing you can ever think about. Let's dive.
 
-## forming friendships
 
-Firstly, you will definitely enjoy [this text](https://moretothat.com/are-you-my-friend) by Lawrence Yeo. It's a very deep exploration about the definition and formation of friendships.
+You'll definitely enjoy [this text](https://moretothat.com/are-you-my-friend) by Lawrence Yeo. It's a very deep exploration about the definition and formation of friendships.
 
 As discussed by Lawrence, deeper friendships are very impactful. If I am to roughly categorize the friendship levels, it would be something like this:
 
@@ -35,13 +32,12 @@ Statistically speaking, quality time spent together is a direct correlated to cl
 But of course, friendships are all about quality over quantity. Friendships that contain good conversations can make both parties feel much closer.
 
 
-## sustaining friendships
-
 Forming good friendships take a lot of destiny (?) and time. So it's important to sustain them.
 
 Of course, it's absolutely not important to sustain all friendships. After all, one person can only handle so much close friendships.
 
 > "The size of your friendship group actually stays pretty stable, at about 20 to 30 friends. However, half of your friends get replaced by new ones every 7 years."
+
 
 Why do close friends fall apart? Why is it so difficult to prevent this?
 

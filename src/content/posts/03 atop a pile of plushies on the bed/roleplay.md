@@ -3,11 +3,10 @@ title:
 description: 
 aliases: 
 tags:
-  - all
   - mechanic
   - introspection
 created: 2025-12-14T18:09:54
-modified: 2026-09-09T21:45:36
+modified: 2026-09-16T18:29:16
 publish: true
 published: 2025-12-14
 permalink: roleplay
