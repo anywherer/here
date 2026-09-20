@@ -38,6 +38,7 @@ export async function GET(context: APIContext) {
 
       const rawHtml =
         (post.entry as { rendered?: { html?: string } }).rendered?.html ||
+        post.entry.body ||
         post.entry.data.description ||
         '';
 
@@ -52,14 +53,20 @@ export async function GET(context: APIContext) {
           'h2',
           'h3',
           'h4',
+          'del',
+          's',
+          'mark',
+          'sup',
+          'sub',
         ]),
         allowedAttributes: {
           ...sanitizeHtml.defaults.allowedAttributes,
-          a: ['href', 'title', 'rel'],
+          // Preserves footnote IDs and heading IDs
+          '*': ['id'],
+          a: ['href', 'title', 'rel', 'id'],
           img: ['src', 'srcset', 'alt', 'title', 'width', 'height'],
           source: ['srcset', 'type', 'media'],
         },
-        // readers ignore your CSS anyway; this also kills the overflow-x warning
         allowedStyles: {},
       });
 
@@ -74,6 +81,8 @@ export async function GET(context: APIContext) {
         pubDate: post.date,
         description,
         link: path,
+        // 1. ADDED: Guarantees unique post identification (W3C Requirement)
+        guid: postUrl,
         categories: post.entry.data.tags || [],
         content: absoluteHtml,
       };
@@ -102,6 +111,12 @@ function toPlainText(html: string) {
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
+    // 2. Decode entities so @astrojs/rss doesn't double-escape them into &amp;quot;
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -123,7 +138,7 @@ function absolutizeHtml(html: string, pageUrl: string, siteUrl: string) {
       return raw;
     }
 
-    // footnote / heading anchors should point at the post, not "current reader page"
+    // Footnote / heading anchors should point at the post, not "current reader page"
     if (value.startsWith('#')) return `${pageUrl}${value}`;
 
     try {
