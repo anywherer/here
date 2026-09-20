@@ -16,6 +16,7 @@ const { title = "here ♡" } = Astro.props;
     <meta name="color-scheme" content="light" />
     <title>{title}</title>
     <link rel="icon" href="data:," />
+    <link rel="alternate" type="application/rss+xml" title="here ♡" href={new URL("rss.xml", Astro.site)} />
     <ClientRouter />
   </head>
   <body>
