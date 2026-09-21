@@ -46,4 +46,18 @@ export default defineConfig({
   markdown: {
     remarkPlugins: [remarkHighlight],
   },
+  vite: {
+    build: {
+      assetsInlineLimit: 4096,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules') || id.includes('_astro')) {
+              return 'main';
+            }
+          },
+        },
+      },
+    },
+  },
 });
