@@ -23,7 +23,7 @@ export async function GET(context: APIContext) {
     description:
       'Here is a little place, somewhere lonely and cute, in a world big and complicated. Welcome to some of my writings, big and small.',
     site: siteUrl,
-    trailingSlash: true,
+    trailingSlash: false,
     xmlns: {
       atom: 'http://www.w3.org/2005/Atom',
     },
@@ -33,6 +33,7 @@ export async function GET(context: APIContext) {
       `<lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`,
     ].join(''),
     items: sortedPosts.map((post) => {
+      // 2. Output slash-free path: e.g. /write-drunk-edit-sober
       const path = `/${trimSlashes(post.slug)}`;
       const postUrl = new URL(path, siteUrl).href;
 
@@ -61,7 +62,6 @@ export async function GET(context: APIContext) {
         ]),
         allowedAttributes: {
           ...sanitizeHtml.defaults.allowedAttributes,
-          // Preserves footnote IDs and heading IDs
           '*': ['id'],
           a: ['href', 'title', 'rel', 'id'],
           img: ['src', 'srcset', 'alt', 'title', 'width', 'height'],
@@ -81,7 +81,6 @@ export async function GET(context: APIContext) {
         pubDate: post.date,
         description,
         link: path,
-        // 1. ADDED: Guarantees unique post identification (W3C Requirement)
         guid: postUrl,
         categories: post.entry.data.tags || [],
         content: absoluteHtml,
@@ -111,7 +110,6 @@ function toPlainText(html: string) {
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
-    // 2. Decode entities so @astrojs/rss doesn't double-escape them into &amp;quot;
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
@@ -137,8 +135,6 @@ function absolutizeHtml(html: string, pageUrl: string, siteUrl: string) {
     ) {
       return raw;
     }
-
-    // Footnote / heading anchors should point at the post, not "current reader page"
     if (value.startsWith('#')) return `${pageUrl}${value}`;
 
     try {
