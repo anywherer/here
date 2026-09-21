@@ -8,13 +8,12 @@ interface TreeNode {
 }
 
 const allPosts = await getCollection('posts', isPublished);
-
 const root: TreeNode = { folders: new Map(), files: [] };
 
 for (const post of allPosts) {
   const { title, slug } = getPostMetadata(post);
   const parts = post.id.split('/');
-  parts.pop(); // Remove filename
+  parts.pop();
 
   let current = root;
   for (const segment of parts) {
@@ -28,9 +27,10 @@ for (const post of allPosts) {
 
 function renderTree(node: TreeNode, path = ''): string {
   let html = '';
+  const sortedFolders = Array.from(node.folders.entries()).sort(([a], [b]) =>
+    a.localeCompare(b)
+  );
 
-  // Sort and render folders (collapsed by default: no `open` attribute)
-  const sortedFolders = Array.from(node.folders.entries()).sort(([a], [b]) => a.localeCompare(b));
   for (const [name, subFolder] of sortedFolders) {
     const folderPath = path ? `${path}/${name}` : name;
     html += `
@@ -46,59 +46,132 @@ function renderTree(node: TreeNode, path = ''): string {
     `;
   }
 
-  // Sort and render files (NO trailing slash on links)
   const sortedFiles = node.files.sort((a, b) => a.title.localeCompare(b.title));
   if (sortedFiles.length > 0) {
     html += `<ul class="file-list">`;
     for (const file of sortedFiles) {
       html += `
         <li class="file-item">
-          <a href="/${file.slug}" class="file-link">${file.title}</a>
+          <a href="/${file.slug}" class="file-link" data-slug="${file.slug}">${file.title}</a>
         </li>
       `;
     }
     html += `</ul>`;
   }
-
   return html;
 }
 
 const treeHtml = renderTree(root);
+const STORAGE_KEY = 'open-folders';
 ---
 
-<nav-explorer class="explorer">
+{/* Hide until localStorage is applied so the first paint is already the restored tree. */}
+<style is:inline>
+  #sidebar-explorer:not(.is-hydrated) { visibility: hidden; }
+</style>
+
+<nav-explorer
+  class="explorer"
+  id="sidebar-explorer"
+  data-storage-key={STORAGE_KEY}
+  transition:persist="sidebar-explorer"
+>
   <div class="explorer-header">Explorer ▾</div>
   <div class="explorer-tree" set:html={treeHtml} />
 </nav-explorer>
 
-<script>
-  class NavExplorer extends HTMLElement {
-    connectedCallback() {
-      const KEY = 'open-folders';
-      const openFolders = new Set(JSON.parse(localStorage.getItem(KEY) || '[]'));
+{/* Blocking: runs as soon as the tree is in the DOM, before paint of this subtree. */}
+<script is:inline>
+  (function hydrateExplorer() {
+    var explorer = document.getElementById('sidebar-explorer');
+    if (!explorer || explorer.classList.contains('is-hydrated')) return;
 
-      // 1. Restore previously opened folders
-      this.querySelectorAll<HTMLDetailsElement>('details[data-path]').forEach((el) => {
-        if (openFolders.has(el.dataset.path)) el.open = true;
-      });
-
-      // 2. Save toggle states (capture phase captures unbubbled 'toggle' events)
-      this.addEventListener('toggle', (e) => {
-        const el = e.target as HTMLDetailsElement;
-        const path = el.dataset.path;
-        if (!path) return;
-
-        if (el.open) openFolders.add(path);
-        else openFolders.delete(path);
-
-        localStorage.setItem(KEY, JSON.stringify([...openFolders]));
-      }, true);
+    var key = explorer.getAttribute('data-storage-key') || 'open-folders';
+    var openFolders = [];
+    try {
+      openFolders = JSON.parse(localStorage.getItem(key) || '[]');
+    } catch (e) {
+      openFolders = [];
     }
+
+    for (var i = 0; i < openFolders.length; i++) {
+      var details = explorer.querySelector('details[data-path="' + CSS.escape(openFolders[i]) + '"]');
+      if (details) details.open = true;
+    }
+
+    var currentPath = location.pathname.replace(/\/$/, '');
+    var links = explorer.querySelectorAll('.file-link');
+    for (var j = 0; j < links.length; j++) {
+      var href = (links[j].getAttribute('href') || '').replace(/\/$/, '');
+      if (href === currentPath) {
+        links[j].classList.add('is-active');
+        var parent = links[j].closest('details');
+        while (parent) {
+          parent.open = true;
+          parent = parent.parentElement && parent.parentElement.closest('details');
+        }
+      }
+    }
+
+    explorer.classList.add('is-hydrated');
+  })();
+</script>
+
+<script>
+  const STORAGE_KEY = 'open-folders';
+
+  function persistOpenFolders(explorer: Element) {
+    const open = [...explorer.querySelectorAll('details[data-path][open]')].map(
+      (el) => (el as HTMLElement).dataset.path
+    ).filter(Boolean);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(open));
   }
 
-  if (!customElements.get('nav-explorer')) {
-    customElements.define('nav-explorer', NavExplorer);
+  function markActiveLink(explorer: Element) {
+    const currentPath = window.location.pathname.replace(/\/$/, '');
+    explorer.querySelectorAll<HTMLAnchorElement>('.file-link').forEach((link) => {
+      const href = link.getAttribute('href')?.replace(/\/$/, '');
+      const isActive = href === currentPath;
+      link.classList.toggle('is-active', isActive);
+
+      if (isActive) {
+        let parent = link.closest('details');
+        while (parent) {
+          parent.open = true;
+          parent = parent.parentElement?.closest('details') ?? null;
+        }
+      }
+    });
+    persistOpenFolders(explorer);
   }
+
+  function bindExplorer(explorer: HTMLElement) {
+    if (explorer.dataset.initialized === 'true') return;
+
+    explorer.addEventListener(
+      'toggle',
+      (e) => {
+        const el = e.target as HTMLDetailsElement;
+        if (!(el instanceof HTMLDetailsElement) || !el.dataset.path) return;
+        if (!explorer.contains(el)) return;
+        persistOpenFolders(explorer);
+      },
+      true
+    );
+
+    explorer.dataset.initialized = 'true';
+  }
+
+  function initExplorer() {
+    const explorer = document.getElementById('sidebar-explorer') as HTMLElement | null;
+    if (!explorer) return;
+
+    bindExplorer(explorer);
+    markActiveLink(explorer);
+    explorer.classList.add('is-hydrated');
+  }
+
+  document.addEventListener('astro:page-load', initExplorer);
 </script>
 
 <style is:global>
@@ -107,17 +180,15 @@ const treeHtml = renderTree(root);
     font-size: 0.88rem;
     user-select: none;
   }
-  .explorer-header {
-    font-weight: 700;
-    margin-bottom: 0.6rem;
-    color: #475569;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+
+  nav-explorer.explorer:not(.is-hydrated) .folder-arrow {
+    transition: none;
   }
-  .folder-group {
-    margin-bottom: 0.25rem;
+
+  .folder-group:not([open]) .folder-arrow {
+    transform: rotate(-90deg);
   }
+
   .folder-summary {
     cursor: pointer;
     display: flex;
@@ -128,50 +199,49 @@ const treeHtml = renderTree(root);
     color: #334155;
     font-weight: 500;
     list-style: none;
-    transition: background 0.1s ease;
   }
+
   .folder-summary::-webkit-details-marker {
     display: none;
   }
+
   .folder-summary:hover {
     background: #f1f5f9;
     color: #0369a1;
   }
+
   .folder-arrow {
     display: inline-block;
     font-size: 0.75rem;
     color: #94a3b8;
-    transition: transform 0.15s ease;
+    transition: transform 0.15s ease-out;
     width: 12px;
     text-align: center;
   }
-  details:not([open]) > .folder-summary .folder-arrow {
-    transform: rotate(-90deg);
-  }
+
   .folder-children {
     padding-left: 0.75rem;
     margin-left: 0.5rem;
     border-left: 1.5px solid #e2e8f0;
   }
+
   .file-list {
     list-style: none;
+    margin: 0;
     padding: 0;
-    margin: 0.2rem 0;
   }
-  .file-item {
-    margin: 0.15rem 0;
-  }
+
   .file-link {
     display: block;
-    padding: 0.2rem 0.4rem;
+    padding: 0.2rem 0.3rem;
     border-radius: 4px;
-    color: #64748b;
+    color: inherit;
     text-decoration: none;
-    line-height: 1.4;
-    transition: all 0.1s ease;
   }
-  .file-link:hover {
-    background: #f8fafc;
-    color: #0284c7;
+
+  .file-link.is-active {
+    background: #e0f2fe;
+    color: #0369a1;
+    font-weight: 600;
   }
 </style>
