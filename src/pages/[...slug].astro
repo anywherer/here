@@ -20,7 +20,7 @@ const { Content } = await render(post);
 const { title, date, folder } = getPostMetadata(post);
 ---
 
-<Layout title={`${title} ♡`}>
+<Layout title={`${title}`}>
   <article class="post-container">
     <!-- Breadcrumbs -->
     <nav class="breadcrumbs">
@@ -90,10 +90,6 @@ const { title, date, folder } = getPostMetadata(post);
     display: flex;
     gap: 0.35rem;
   }
-
-  /* =========================================
-     OBSIDIAN / NOTEPAD-LIKE TEXT RENDERING
-     ========================================= */
   .markdown-body {
     font-size: 1rem;
     line-height: 1.65;

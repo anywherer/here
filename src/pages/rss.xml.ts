@@ -19,7 +19,7 @@ export async function GET(context: APIContext) {
     .sort((a, b) => b.date.getTime() - a.date.getTime());
 
   return rss({
-    title: 'here ♡',
+    title: 'here',
     description:
       'Here is a little place, somewhere lonely and cute, in a world big and complicated. Welcome to some of my writings, big and small.',
     site: siteUrl,

@@ -4,13 +4,8 @@ import Layout from '../../layouts/Layout.astro';
 import { getPostMetadata, isPublished, formatDate } from '../../utils';
 
 export async function getStaticPaths() {
-  // 1. Only collect published posts
   const posts = await getCollection('posts', isPublished);
-
-  // 2. Find every unique tag used across all published posts
   const tags = [...new Set(posts.flatMap((p) => p.data.tags))];
-
-  // 3. Generate a page for each tag (e.g. /tags/mechanic)
   return tags.map((tag) => ({
     params: { tag },
     props: {
@@ -27,7 +22,7 @@ export async function getStaticPaths() {
 const { tag, posts } = Astro.props;
 ---
 
-<Layout title={`#${tag} — here ♡`}>
+<Layout title={`#${tag}`}>
   <nav class="breadcrumbs">
     <a href="/">Home</a> › <span>tags</span> › <span>#{tag}</span>
   </nav>
