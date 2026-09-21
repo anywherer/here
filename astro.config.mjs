@@ -35,6 +35,10 @@ export default defineConfig({
   site: 'https://somewherer.com',
   scopedStyleStrategy: 'where',
   trailingSlash: 'never',
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: 'viewport',
+  },
   build: {
     format: 'file',
     inlineStylesheets: 'always',
