@@ -1,0 +1,46 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="404">
+  <!-- Instant Trailing Slash Redirect -->
+  <script is:inline>
+    const path = window.location.pathname;
+    // If URL has a trailing slash (and is not root "/"), strip it and redirect instantly
+    if (path.length > 1 && path.endsWith('/')) {
+      const cleanPath = path.slice(0, -1) + window.location.search + window.location.hash;
+      window.location.replace(cleanPath);
+    }
+  </script>
+
+  <div class="not-found">
+    <h1>404</h1>
+    <p>You've wandered somewhere that is yet to be found.</p>
+    <a href="/" class="home-link">Return home</a>
+  </div>
+</Layout>
+
+<style>
+  .not-found {
+    padding: 3rem 0;
+    max-width: 600px;
+  }
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    color: #0f172a;
+  }
+  p {
+    color: #64748b;
+    margin-bottom: 1.5rem;
+  }
+  .home-link {
+    color: #0284c7;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .home-link:hover {
+    text-decoration: underline;
+  }
+</style>
