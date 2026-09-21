@@ -5,7 +5,7 @@ aliases:
 tags:
   - mechanic
 created: 2026-09-09T20:52:24
-modified: 2026-09-17T20:32:53
+modified: 2026-09-21T13:08:32
 publish: true
 published: 2026-09-09
 permalink: children and false selves

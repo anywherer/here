@@ -5,13 +5,11 @@ aliases:
 tags:
   - theory
 created: 2024-11-25T19:40:02
-modified: 2026-09-16T18:29:31
+modified: 2026-09-21T13:55:40
 publish: true
 published: 2024-11-25
 permalink: what if you are everyone
 ---
-
-## The Egg
 
 [The Egg](https://galactanet.com/oneoff/theegg.html) is one of my favorite short stories. It describes a world where all consciousness is ultimately you. You have had so many lives, each time reborn to experience the world through another's eyes.
 

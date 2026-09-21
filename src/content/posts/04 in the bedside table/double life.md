@@ -4,19 +4,25 @@ description:
 aliases: 
 tags: 
 created: 2025-08-13T19:03:03
-modified: 2026-09-17T19:07:00
+modified: 2026-09-21T13:43:57
 publish: true
 published: 2025-08-13
 permalink: double life
 ---
 
+I believe life is too short to only life through one persona.
+
 In a Despicable Me movie, there's a nice song named Double Life.
 
 The concept of living multiples lives is exciting. In movies, it’s the superhero who files office reports by day and fights villains by night. In games, it’s the respawn mechanic — the joy of trying again, seeing how the story changes when you make different choices. And sometimes, it’s not fiction at all.
 
-Most of us already live in more than one skin. At work, you might be the calm, professional problem-solver; with friends, the loud comedian; online, maybe a mysterious username with a completely different energy. That’s not necessarily deceit — it’s adaptation. But there’s a thin line between flexibility and feeling like you’ve split into pieces.
+Most of us already live in more than one skin. At work, you might be the calm, professional problem-solver; with friends, the loud comedian; online, maybe a mysterious username with a completely different energy. That’s not necessarily deceit.
 
-Actors blur this line for a living. They don’t just pretend — they inhabit. Every role is a different life lived for a while, drawing on some hidden part of themselves. One might argue that by being an actor, you're always pretending and it isn't as good as having your authentic self and being relaxed and staying who you are. Well, I have something to say about that. Staying who you are is boring. Like, the life of an actor is how you express different sides of yourself. Why just play one character in a game when you can play all?
+There’s a thin line between flexibility and feeling like you’ve split into pieces.
+
+Actors blur this line for a living. Every role is a different life lived for a while, drawing on some hidden part of themselves. One might argue that by being an actor, you're always pretending and it isn't as good as having your authentic self and being relaxed and staying who you are.
+
+Well, I have something to say about that. Staying who you are is boring. Like, the life of an actor is how you express different sides of yourself. Why just play one character in a game when you can play all?
 
 
 What if you had "multiple lives"?
