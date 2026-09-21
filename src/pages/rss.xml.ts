@@ -33,7 +33,7 @@ export async function GET(context: APIContext) {
       `<lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`,
     ].join(''),
     items: sortedPosts.map((post) => {
-      const path = `/${trimSlashes(post.slug)}/`;
+      const path = `/${trimSlashes(post.slug)}`;
       const postUrl = new URL(path, siteUrl).href;
 
       const rawHtml =
