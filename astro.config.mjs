@@ -39,9 +39,6 @@ export default defineConfig({
     prefetchAll: true,
     defaultStrategy: 'viewport',
   },
-  experimental: {
-    clientPrerender: true, 
-  }
   build: {
     format: 'file',
     inlineStylesheets: 'always',
