@@ -17,7 +17,7 @@ const { title = "here ♡" } = Astro.props;
     <title>{title}</title>
     <link rel="icon" href="data:," />
     <link rel="alternate" type="application/rss+xml" title="here ♡" href={new URL("rss.xml", Astro.site)} />
-    <ClientRouter transition:animate="none" />
+    <ClientRouter />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -42,9 +42,19 @@ const { title = "here ♡" } = Astro.props;
 
 <style is:global>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 100ms;
+    animation-timing-function: ease-out;
+  }
+  ::view-transition-old(root) {
+    filter: blur(0);
+  }
+  ::view-transition-new(root) {
+    filter: blur(2px);
+  }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: Arial, sans-serif;
     color: #1a1a1a;
     background: #fff;
     line-height: 1.6;
@@ -144,4 +154,5 @@ const { title = "here ♡" } = Astro.props;
   .tag-badge:hover {
     background: #ccebe5;
   }
+
 </style>
