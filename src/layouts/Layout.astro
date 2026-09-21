@@ -44,15 +44,17 @@ const { title = "here ♡" } = Astro.props;
   * { box-sizing: border-box; margin: 0; padding: 0; }
   ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation-duration: 100ms;
-    animation-timing-function: ease-out;
+    animation-duration: 60ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    mix-blend-mode: normal;
   }
   ::view-transition-old(root) {
-    filter: blur(0);
+    opacity: 1;
   }
   ::view-transition-new(root) {
-    filter: blur(2px);
+    opacity: 0;
   }
+  .astro-route-announcer { display: none; }
   body {
     font-family: Arial, sans-serif;
     color: #1a1a1a;
