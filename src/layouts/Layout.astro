@@ -1,11 +1,12 @@
 ---
-import { ClientRouter } from "astro:transitions";
-import Explorer from "../components/Explorer.astro";
-import Search from "../components/Search.astro";
+import { ClientRouter } from 'astro:transitions';
+import Explorer from '../components/Explorer.astro';
+import Search from '../components/Search.astro';
 
 interface Props {
   title?: string;
 }
+
 const { title = "here" } = Astro.props;
 ---
 
@@ -17,18 +18,11 @@ const { title = "here" } = Astro.props;
     <meta name="color-scheme" content="light" />
     <title>{title}</title>
     <link rel="icon" href="data:," />
-    <link
-      rel="alternate"
-      type="application/rss+xml"
-      title="here"
-      href={new URL("rss.xml", Astro.site)}
-    />
-    <!-- swap = no fake fade on browsers without View Transitions -->
-    <ClientRouter fallback="swap" />
+    <link rel="alternate" type="application/rss+xml" title="here" href={new URL("rss.xml", Astro.site)} />
+    <ClientRouter />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
-
     <div class="site-container">
       <main
         id="main"
@@ -54,96 +48,51 @@ const { title = "here" } = Astro.props;
 </html>
 
 <style is:global>
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --shutter: #111;
-    --shutter-close: 140ms;
-    --shutter-hold: 50ms;
-    --shutter-open: 200ms;
-    --ease-close: cubic-bezier(0.6, 0.02, 0.9, 0.35);
-    --ease-open: cubic-bezier(0.16, 1, 0.3, 1);
+    --vt-in: 240ms;
+    --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  /* Named only on main. Sidebar persists, so don't snapshot it. */
-  .content {
-    view-transition-name: main-content;
-  }
-
-  header,
-  nav,
-  footer,
-  .sidebar,
-  .chrome {
-    view-transition-name: none;
-  }
-
-  /* Kill the full-page morph. That's the blink you were getting. */
+  /* Kill the giant root snapshot so only main actually transitions */
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation: none;
     mix-blend-mode: normal;
   }
 
-  ::view-transition-image-pair(root) {
-    isolation: auto;
+  header, nav, footer, .chrome, .sidebar {
+    view-transition-name: none;
   }
 
-  /*
-    Group is the shutter body.
-    When both snapshots clip to a slit, this colour is the blades.
-  */
+  /* Old content: gone immediately. No fade, no slide. */
+  ::view-transition-old(main-content) {
+    animation: none !important;
+    display: none;
+  }
+
+  /* New content: already in place, starts dim, eases hard to 1 */
   ::view-transition-group(main-content) {
-    background: var(--shutter);
-    overflow: clip;
     animation: none;
   }
 
-  ::view-transition-image-pair(main-content) {
-    isolation: auto;
-  }
-
-  ::view-transition-old(main-content),
   ::view-transition-new(main-content) {
-    mix-blend-mode: normal;
-    height: 100%;
-    object-fit: none;
-    object-position: top left;
+    animation: content-in var(--vt-in) var(--ease-expo) both;
   }
 
-  /* Old note gets eaten by two blades meeting in the middle */
-  ::view-transition-old(main-content) {
-    z-index: 2;
-    animation: shutter-close var(--shutter-close) var(--ease-close) both;
+  @keyframes content-in {
+    from { opacity: 0.14; }
+    to   { opacity: 1; }
   }
 
-  /* New note waits for the click, then blades peel open */
-  ::view-transition-new(main-content) {
-    z-index: 1;
-    animation: shutter-open var(--shutter-open) var(--ease-open) both;
-    animation-delay: calc(var(--shutter-close) + var(--shutter-hold));
+  /* Fallback path for browsers without native VT */
+  [data-astro-transition-fallback="old"] .content {
+    opacity: 0;
   }
 
-  @keyframes shutter-close {
-    from {
-      clip-path: inset(0 0 0 0);
-    }
-    to {
-      clip-path: inset(50% 0 50% 0);
-    }
-  }
-
-  @keyframes shutter-open {
-    from {
-      clip-path: inset(50% 0 50% 0);
-    }
-    to {
-      clip-path: inset(0 0 0 0);
-    }
+  [data-astro-transition-fallback="new"] .content {
+    animation: content-in var(--vt-in) var(--ease-expo) both;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -152,9 +101,19 @@ const { title = "here" } = Astro.props;
     ::view-transition-new(*) {
       animation: none !important;
     }
+
+    [data-astro-transition-fallback="old"] .content,
+    [data-astro-transition-fallback="new"] .content {
+      animation: none !important;
+      opacity: 1;
+    }
   }
 
-  /* --- Base --- */
+  .content img,
+  .content video {
+    content-visibility: auto;
+  }
+
   body {
     font-family: Comic Sans MS, Chalkboard SE, Arial, sans-serif;
     color: #1a1a1a;
@@ -181,14 +140,7 @@ const { title = "here" } = Astro.props;
     align-self: start;
   }
 
-  .content {
-    grid-area: content;
-  }
-
-  .content img,
-  .content video {
-    content-visibility: auto;
-  }
+  .content { grid-area: content; }
 
   .skip-link {
     position: absolute;
@@ -202,9 +154,8 @@ const { title = "here" } = Astro.props;
     border-radius: 4px;
     transition: top 0.2s;
   }
-  .skip-link:focus {
-    top: 1rem;
-  }
+
+  .skip-link:focus { top: 1rem; }
 
   .brand {
     font-size: 1.5rem;
@@ -220,10 +171,6 @@ const { title = "here" } = Astro.props;
       grid-template-columns: 1fr;
       grid-template-areas: "content" "sidebar";
       gap: 1.5rem;
-    }
-
-    .sidebar {
-      position: static;
     }
   }
 </style>
