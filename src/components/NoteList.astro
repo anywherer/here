@@ -1,0 +1,47 @@
+---
+import { formatDate, getTagSlug, type Note } from '../utils';
+
+interface Props {
+  notes: Note[];
+}
+
+const { notes } = Astro.props;
+---
+
+<div class="item-list">
+  {notes.map((note) => (
+    <div class="item-row">
+      <time class="item-date" datetime={note.date.toISOString()}>{formatDate(note.date)}</time>
+      <a href={`/${note.slug}`} class="item-title">{note.title}</a>
+      <div class="item-tags">
+        {note.tags.map((t) => (
+          <a href={`/tags/${getTagSlug(t)}`} class="tag-badge">#{t}</a>
+        ))}
+      </div>
+    </div>
+  ))}
+</div>
+
+<style>
+  .item-list { border-top: 1px solid #eee; }
+  .item-row {
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f3f4f6;
+    gap: 1rem;
+  }
+  .item-date { font-size: 0.85rem; color: #6b7280; }
+  .item-title { font-weight: 700; color: #0369a1; text-decoration: none; }
+  .item-title:hover { text-decoration: underline; }
+  .item-tags { display: flex; flex-wrap: wrap; gap: 0.25rem; justify-content: flex-end; }
+
+  @media (max-width: 640px) {
+    .item-row {
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+      padding: 0.85rem 0;
+    }
+  }
+</style>
