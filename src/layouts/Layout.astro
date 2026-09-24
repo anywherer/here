@@ -7,9 +7,30 @@ interface Props {
   title?: string;
 }
 const { title = "here" } = Astro.props;
+
+/* Notebook swap — not a site fade, not a full slide. */
+const noteOut = {
+  name: 'note-out',
+  duration: '130ms',
+  easing: 'cubic-bezier(0.4, 0, 1, 1)',
+  fillMode: 'both',
+};
+const noteIn = {
+  name: 'note-in',
+  duration: '240ms',
+  easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+  fillMode: 'both',
+};
+const noteOutBack = { ...noteOut, name: 'note-out-back' };
+const noteInBack = { ...noteIn, name: 'note-in-back' };
+
+const noteSwap = {
+  forwards:  { old: noteOut, new: noteIn },
+  backwards: { old: noteOutBack, new: noteInBack },
+};
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" transition:animate="none">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -17,30 +38,22 @@ const { title = "here" } = Astro.props;
     <title>{title}</title>
     <link rel="icon" href="data:," />
     <link rel="alternate" type="application/rss+xml" title="here" href={new URL("rss.xml", Astro.site)} />
-    <ClientRouter />
+    <ClientRouter fallback="swap" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
 
     <div class="site-container">
-      <!-- 
-        1. Added transition:animate="fade" specifically to the main content.
-        2. Added a unique transition:name so the browser knows this is the moving part.
-      -->
-      <main 
-        id="main" 
-        class="content" 
-        tabindex="-1" 
-        transition:animate="initial"
-        style="view-transition-name: main-content;"
+      <main
+        id="main"
+        class="content"
+        tabindex="-1"
+        transition:name="main-content"
+        transition:animate={noteSwap}
       >
         <slot />
       </main>
 
-      <!-- 
-        transition:persist ensures the sidebar and the Explorer 
-        state (scroll position/open folders) NEVER resets.
-      -->
       <aside class="sidebar" aria-label="Site" transition:persist="sidebar">
         <header>
           <a href="/" class="brand">here</a>
@@ -56,83 +69,50 @@ const { title = "here" } = Astro.props;
 
 <style is:global>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --vt-out: 140ms;
-    --vt-in: 220ms;
-    --ease-out: cubic-bezier(0.4, 0, 1, 1);     /* leave fast */
-    --ease-in:  cubic-bezier(0.16, 1, 0.3, 1);  /* land soft */
-  }
 
-  /* Only snapshot what actually changes */
-  .main-content {
-    view-transition-name: main-content;
+  /* Cheap snapshots only. Don't morph the whole document. */
+  ::view-transition {
+    pointer-events: none;
   }
-
-  /* Don’t let the browser animate the giant root snapshot */
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
+  ::view-transition-group(root) {
     animation: none;
   }
-
-  ::view-transition-group(main-content) {
-    animation-duration: var(--vt-in);
-    animation-timing-function: var(--ease-in);
-  }
-
-  ::view-transition-old(main-content) {
-    animation: fade-out var(--vt-out) var(--ease-out) both;
-  }
-
-  ::view-transition-new(main-content) {
-    animation: fade-in var(--vt-in) var(--ease-in) both;
-  }
-
-  @keyframes fade-out {
-    to {
-      opacity: 0;
-      transform: translateY(-2px);
-    }
-  }
-
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-      transform: translateY(6px);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    ::view-transition-old(root),
-    ::view-transition-new(root),
-    ::view-transition-old(main-content),
-    ::view-transition-new(main-content) {
-      animation: none !important;
-    }
-  }
-
-  /* Disable standard root morphing to prevent the "whole page blink" */
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation: none;
     mix-blend-mode: normal;
   }
-  /* Stop headers/nav/footers from getting captured into the morph */
-  header, nav, footer, .chrome {
-    view-transition-name: none;
+  ::view-transition-group(main-content) {
+    overflow: clip;
   }
 
-  /* If images/video in main would make a fat snapshot */
-  .main-content img,
-  .main-content video {
-    content-visibility: auto;
+  @keyframes note-out {
+    to { opacity: 0; transform: translateY(-8px); }
   }
-  /* --- Base Styles --- */
+  @keyframes note-in {
+    from { opacity: 0; transform: translateY(12px); }
+  }
+  @keyframes note-out-back {
+    to { opacity: 0; transform: translateY(8px); }
+  }
+  @keyframes note-in-back {
+    from { opacity: 0; transform: translateY(-12px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
+  }
+
   body {
     font-family: Comic Sans MS, Chalkboard SE, Arial, sans-serif;
     color: #1a1a1a;
     background: #fff;
     line-height: 1.6;
-    overflow-y: scroll; /* Prevents layout shift from scrollbar appearing/disappearing */
+    overflow-y: scroll;
   }
 
   .site-container {
@@ -146,16 +126,15 @@ const { title = "here" } = Astro.props;
     gap: 3rem;
   }
 
-  .sidebar { 
+  .sidebar {
     grid-area: sidebar;
-    height: sticky;
+    position: sticky;
     top: 2rem;
     align-self: start;
   }
-  
+
   .content { grid-area: content; }
 
-  /* --- Accessibility & Utilities --- */
   .skip-link {
     position: absolute;
     left: 1rem;
@@ -185,13 +164,6 @@ const { title = "here" } = Astro.props;
       grid-template-areas: "content" "sidebar";
       gap: 1.5rem;
     }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    ::view-transition-group(*),
-    ::view-transition-old(*),
-    ::view-transition-new(*) {
-      animation: none !important;
-    }
+    .sidebar { position: static; }
   }
 </style>
