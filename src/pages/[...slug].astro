@@ -1,7 +1,7 @@
 ---
 import { render } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-import { collectRoutes, formatDate, getFolderSlug, getPublishedNotes, getTagSlug } from '../utils';
+import { collectRoutes, folderTrail, formatDate, getPublishedNotes, getTagSlug } from '../utils';
 
 export async function getStaticPaths() {
   const notes = await getPublishedNotes();
@@ -21,8 +21,13 @@ const description = note.entry.data.description || `${note.title} — a note fro
 <Layout title={note.title} description={description} canonicalPath={`/${note.slug}`}>
   <article class="post-container">
     <nav class="breadcrumbs">
-      <a href="/">Home</a> ›
-      <a href={`/folders/${getFolderSlug(note.folder)}`}>{note.folder}</a>
+      <a href="/">Home</a>
+      {folderTrail(note.folderParts).map((room) => (
+        <>
+          {' › '}
+          <a href={room.href}>{room.name}</a>
+        </>
+      ))}
     </nav>
 
     <header class="post-header">

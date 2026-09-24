@@ -1,0 +1,118 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import NoteList from '../../components/NoteList.astro';
+import { folderTrail, getFolderHref, getPublishedNotes, slugify } from '../../utils';
+
+export async function getStaticPaths() {
+  const notes = await getPublishedNotes();
+  const rooms = new Map<string, string[]>();
+
+  for (const note of notes) {
+    for (let depth = 1; depth <= note.folderParts.length; depth += 1) {
+      const parts = note.folderParts.slice(0, depth);
+      const param = parts.map(slugify).join('/');
+      if (!rooms.has(param)) rooms.set(param, parts);
+    }
+  }
+
+  return [...rooms.entries()].map(([param, parts]) => {
+    const here = notes.filter((note) =>
+      note.folderParts.length === parts.length &&
+      parts.every((part, i) => note.folderParts[i] === part)
+    );
+
+    const childNames = new Set<string>();
+    for (const note of notes) {
+      if (
+        note.folderParts.length > parts.length &&
+        parts.every((part, i) => note.folderParts[i] === part)
+      ) {
+        childNames.add(note.folderParts[parts.length]);
+      }
+    }
+
+    const children = [...childNames]
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+      .map((name) => ({
+        name,
+        href: getFolderHref([...parts, name]),
+      }));
+
+    return {
+      params: { folder: param },
+      props: { parts, notes: here, children },
+    };
+  });
+}
+
+const { parts, notes, children } = Astro.props;
+const trail = folderTrail(parts);
+const title = parts[parts.length - 1] ?? 'house';
+---
+
+<Layout title={title} description={`${notes.length} notes in ${parts.join(' › ')}.`}>
+  <nav class="breadcrumbs">
+    <a href="/">Home</a>
+    {trail.map((room, index) => (
+      <>
+        {' › '}
+        {index === trail.length - 1 ? (
+          <span>{room.name}</span>
+        ) : (
+          <a href={room.href}>{room.name}</a>
+        )}
+      </>
+    ))}
+  </nav>
+
+  <h1 class="folder-heading">{title}</h1>
+  <p class="folder-count">
+    {notes.length} {notes.length === 1 ? 'note' : 'notes'} in this room
+    {children.length > 0 && `, ${children.length} ${children.length === 1 ? 'door' : 'doors'} further in`}.
+  </p>
+
+  {children.length > 0 && (
+    <ul class="doors">
+      {children.map((child) => (
+        <li>
+          <a href={child.href}>{child.name}</a>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  <NoteList notes={notes} />
+</Layout>
+
+<style>
+  .folder-heading {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+  }
+  .folder-count {
+    color: #4b5563;
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+  }
+  .doors {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+  }
+  .doors a {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    background: #f1f5f9;
+    color: #0f4c81;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .doors a:hover {
+    background: #e0f2fe;
+  }
+</style>

@@ -5,6 +5,7 @@ export type Post = CollectionEntry<'posts'>;
 export type Note = {
   entry: Post;
   folder: string;
+  folderParts: string[];
   title: string;
   slug: string;
   date: Date;
@@ -36,7 +37,7 @@ export function getPostMetadata(post: Post) {
   const date = post.data.published ? new Date(post.data.published) : new Date();
   const tags = post.data.tags ?? [];
 
-  return { folder, title, slug, date, tags };
+  return { folder, folderParts, title, slug, date, tags };
 }
 
 export function formatDate(date: Date): string {
@@ -54,6 +55,18 @@ export function getTagSlug(tag: string): string {
 
 export function getFolderSlug(folder: string): string {
   return slugify(folder);
+}
+
+export function getFolderHref(parts: string[]): string {
+  if (parts.length === 0) return '/';
+  return `/folders/${parts.map(slugify).join('/')}`;
+}
+
+export function folderTrail(parts: string[]) {
+  return parts.map((name, index) => ({
+    name,
+    href: getFolderHref(parts.slice(0, index + 1)),
+  }));
 }
 
 export async function getPublishedNotes(): Promise<Note[]> {
