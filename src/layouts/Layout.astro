@@ -23,11 +23,25 @@ const { title = "here" } = Astro.props;
     <a class="skip-link" href="#main">Skip to content</a>
 
     <div class="site-container">
-      <main id="main" class="content" tabindex="-1">
+      <!-- 
+        1. Added transition:animate="fade" specifically to the main content.
+        2. Added a unique transition:name so the browser knows this is the moving part.
+      -->
+      <main 
+        id="main" 
+        class="content" 
+        tabindex="-1" 
+        transition:animate="initial"
+        style="view-transition-name: main-content;"
+      >
         <slot />
       </main>
 
-      <aside class="sidebar" aria-label="Site" transition:persist>
+      <!-- 
+        transition:persist ensures the sidebar and the Explorer 
+        state (scroll position/open folders) NEVER resets.
+      -->
+      <aside class="sidebar" aria-label="Site" transition:persist="sidebar">
         <header>
           <a href="/" class="brand">here</a>
         </header>
@@ -42,51 +56,83 @@ const { title = "here" } = Astro.props;
 
 <style is:global>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --vt-out: 140ms;
+    --vt-in: 220ms;
+    --ease-out: cubic-bezier(0.4, 0, 1, 1);     /* leave fast */
+    --ease-in:  cubic-bezier(0.16, 1, 0.3, 1);  /* land soft */
+  }
+
+  /* Only snapshot what actually changes */
+  .main-content {
+    view-transition-name: main-content;
+  }
+
+  /* Don’t let the browser animate the giant root snapshot */
   ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation-duration: 60ms;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    animation: none;
+  }
+
+  ::view-transition-group(main-content) {
+    animation-duration: var(--vt-in);
+    animation-timing-function: var(--ease-in);
+  }
+
+  ::view-transition-old(main-content) {
+    animation: fade-out var(--vt-out) var(--ease-out) both;
+  }
+
+  ::view-transition-new(main-content) {
+    animation: fade-in var(--vt-in) var(--ease-in) both;
+  }
+
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+      transform: translateY(-2px);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root),
+    ::view-transition-old(main-content),
+    ::view-transition-new(main-content) {
+      animation: none !important;
+    }
+  }
+
+  /* Disable standard root morphing to prevent the "whole page blink" */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
     mix-blend-mode: normal;
   }
-  ::view-transition-old(root) {
-    opacity: 1;
+  /* Stop headers/nav/footers from getting captured into the morph */
+  header, nav, footer, .chrome {
+    view-transition-name: none;
   }
-  ::view-transition-new(root) {
-    opacity: 0;
+
+  /* If images/video in main would make a fat snapshot */
+  .main-content img,
+  .main-content video {
+    content-visibility: auto;
   }
-  .astro-route-announcer { display: none; }
+  /* --- Base Styles --- */
   body {
     font-family: Comic Sans MS, Chalkboard SE, Arial, sans-serif;
     color: #1a1a1a;
     background: #fff;
     line-height: 1.6;
-  }
-
-  .skip-link {
-    position: absolute;
-    left: 1rem;
-    top: -3rem;
-    z-index: 100;
-    padding: 0.4rem 0.7rem;
-    background: #0f4c81;
-    color: #fff;
-    text-decoration: none;
-    border-radius: 4px;
-  }
-  .skip-link:focus {
-    top: 1rem;
-  }
-
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+    overflow-y: scroll; /* Prevents layout shift from scrollbar appearing/disappearing */
   }
 
   .site-container {
@@ -99,39 +145,30 @@ const { title = "here" } = Astro.props;
     padding: 2rem;
     gap: 3rem;
   }
-  .sidebar { grid-area: sidebar; }
+
+  .sidebar { 
+    grid-area: sidebar;
+    height: sticky;
+    top: 2rem;
+    align-self: start;
+  }
+  
   .content { grid-area: content; }
 
-  .content:focus {
-    outline: none;
+  /* --- Accessibility & Utilities --- */
+  .skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -3rem;
+    z-index: 100;
+    padding: 0.4rem 0.7rem;
+    background: #0f4c81;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: top 0.2s;
   }
-
-  a:focus-visible,
-  input:focus-visible,
-  button:focus-visible {
-    outline: 2px solid #0284c7;
-    outline-offset: 2px;
-  }
-
-  @media (max-width: 800px) {
-    .site-container {
-      grid-template-columns: 1fr;
-      grid-template-areas:
-        "content"
-        "sidebar";
-      gap: 1.5rem;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    html {
-      view-transition-name: none;
-    }
-    *, *::before, *::after {
-      animation: none !important;
-      transition: none !important;
-    }
-  }
+  .skip-link:focus { top: 1rem; }
 
   .brand {
     font-size: 1.5rem;
@@ -142,19 +179,19 @@ const { title = "here" } = Astro.props;
     margin-bottom: 1.5rem;
   }
 
-  .tag-badge {
-    display: inline-block;
-    background: #e6f4f1;
-    color: #0d685c;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.15rem 0.5rem;
-    border-radius: 4px;
-    text-decoration: none;
-    margin-left: 0.25rem;
-  }
-  .tag-badge:hover {
-    background: #ccebe5;
+  @media (max-width: 800px) {
+    .site-container {
+      grid-template-columns: 1fr;
+      grid-template-areas: "content" "sidebar";
+      gap: 1.5rem;
+    }
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
+  }
 </style>
