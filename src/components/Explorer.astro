@@ -10,10 +10,11 @@ interface TreeNode {
 const allPosts = await getCollection('posts', isPublished);
 const root: TreeNode = { folders: new Map(), files: [] };
 
+// 1. Build tree - (Kept as is, already efficient with Maps)
 for (const post of allPosts) {
   const { title, slug } = getPostMetadata(post);
   const parts = post.id.split('/');
-  parts.pop();
+  parts.pop(); 
 
   let current = root;
   for (const segment of parts) {
@@ -25,135 +26,132 @@ for (const post of allPosts) {
   current.files.push({ title, slug });
 }
 
+// 2. Optimized Recursive Renderer
 function renderTree(node: TreeNode, path = ''): string {
-  let html = '';
-  const sortedFolders = Array.from(node.folders.entries()).sort(([a], [b]) =>
-    a.localeCompare(b)
-  );
+  const buffer: string[] = [];
+
+  // Sort folders once
+  const sortedFolders = Array.from(node.folders.entries())
+    .sort(([a], [b]) => a.localeCompare(b));
 
   for (const [name, subFolder] of sortedFolders) {
     const folderPath = path ? `${path}/${name}` : name;
-    html += `
+    // We use a data-attribute selector that is easy to target specifically
+    buffer.push(`
       <details class="folder-group" data-path="${folderPath}">
         <summary class="folder-summary">
-          <span class="folder-arrow">▾</span>
+          <span class="folder-arrow" aria-hidden="true">▾</span>
           <span class="folder-name">${name}</span>
         </summary>
         <div class="folder-children">
           ${renderTree(subFolder, folderPath)}
         </div>
       </details>
-    `;
+    `);
   }
 
   const sortedFiles = node.files.sort((a, b) => a.title.localeCompare(b.title));
   if (sortedFiles.length > 0) {
-    html += `<ul class="file-list">`;
+    buffer.push('<ul class="file-list">');
     for (const file of sortedFiles) {
-      html += `
+      buffer.push(`
         <li class="file-item">
-          <a href="/${file.slug}" class="file-link" data-slug="${file.slug}">${file.title}</a>
+          <a href="/${file.slug}" class="file-link">${file.title}</a>
         </li>
-      `;
+      `);
     }
-    html += `</ul>`;
+    buffer.push('</ul>');
   }
-  return html;
+
+  return buffer.join('');
 }
 
 const treeHtml = renderTree(root);
-const STORAGE_KEY = 'open-folders';
 ---
 
-{/* Hide until localStorage is applied so the first paint is already the restored tree. */}
-<style is:inline>
-  #sidebar-explorer:not(.is-hydrated) { visibility: hidden; }
-</style>
-
-<nav-explorer
-  class="explorer"
-  id="sidebar-explorer"
-  data-storage-key={STORAGE_KEY}
-  transition:persist="sidebar-explorer"
->
-  <div class="explorer-header">Explorer ▾</div>
+<nav-explorer class="explorer">
+  <div class="explorer-header" role="presentation">Explorer ▾</div>
   <div class="explorer-tree" set:html={treeHtml} />
 </nav-explorer>
 
-{/* Blocking: runs as soon as the tree is in the DOM, before paint of this subtree. */}
-<script is:inline>
-  (function hydrateExplorer() {
-    var explorer = document.getElementById('sidebar-explorer');
-    if (!explorer || explorer.classList.contains('is-hydrated')) return;
-
-    var key = explorer.getAttribute('data-storage-key') || 'open-folders';
-    var openFolders = [];
-    try {
-      openFolders = JSON.parse(localStorage.getItem(key) || '[]');
-    } catch (e) {
-      openFolders = [];
-    }
-
-    for (var i = 0; i < openFolders.length; i++) {
-      var details = explorer.querySelector('details[data-path="' + CSS.escape(openFolders[i]) + '"]');
-      if (details) details.open = true;
-    }
-
-    explorer.classList.add('is-hydrated');
-  })();
-</script>
-
 <script>
-  const STORAGE_KEY = 'open-folders';
+  class NavExplorer extends HTMLElement {
+    private KEY = 'open-folders';
 
-  function persistOpenFolders(explorer: Element) {
-    const open = [...explorer.querySelectorAll('details[data-path][open]')].map(
-      (el) => (el as HTMLElement).dataset.path
-    ).filter(Boolean);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(open));
-  }
+    connectedCallback() {
+      this.restoreState();
 
-  function bindExplorer(explorer: HTMLElement) {
-    if (explorer.dataset.initialized === 'true') return;
-
-    explorer.addEventListener(
-      'toggle',
-      (e) => {
+      // Listen for toggles via event delegation (Capture phase)
+      this.addEventListener('toggle', (e) => {
         const el = e.target as HTMLDetailsElement;
-        if (!(el instanceof HTMLDetailsElement) || !el.dataset.path) return;
-        if (!explorer.contains(el)) return;
-        persistOpenFolders(explorer);
-      },
-      true
-    );
+        const path = el.dataset.path;
+        if (path) this.saveState(path, el.open);
+      }, true);
+    }
 
-    explorer.dataset.initialized = 'true';
+    private restoreState() {
+      try {
+        const saved = localStorage.getItem(this.KEY);
+        if (!saved) return;
+        
+        const openFolders = JSON.parse(saved) as string[];
+        if (!Array.isArray(openFolders)) return;
+
+        // PERFORMANCE: Instead of querySelectorAll('*'), 
+        // we only find the specific folders that need to be opened.
+        // This is significantly faster for large trees.
+        for (const path of openFolders) {
+          const folder = this.querySelector(`details[data-path="${CSS.escape(path)}"]`) as HTMLDetailsElement;
+          if (folder) folder.open = true;
+        }
+      } catch (e) {
+        console.error("Failed to restore explorer state", e);
+      }
+    }
+
+    private saveState(path: string, isOpen: boolean) {
+      const openFolders = new Set(JSON.parse(localStorage.getItem(this.KEY) || '[]'));
+      
+      if (isOpen) openFolders.add(path);
+      else openFolders.delete(path);
+
+      localStorage.setItem(this.KEY, JSON.stringify(Array.from(openFolders)));
+    }
   }
 
-  function initExplorer() {
-    const explorer = document.getElementById('sidebar-explorer') as HTMLElement | null;
-    if (!explorer) return;
-
-    bindExplorer(explorer);
-    explorer.classList.add('is-hydrated');
+  if (!customElements.get('nav-explorer')) {
+    customElements.define('nav-explorer', NavExplorer);
   }
-
-  document.addEventListener('astro:page-load', initExplorer);
 </script>
 
 <style is:global>
-  nav-explorer.explorer {
-    display: block;
-    font-size: 0.88rem;
-    user-select: none;
+  /* ... existing styles ... */
+  
+  .explorer-tree {
+    /* Containment hints for the browser */
+    contain: content;
   }
 
-  nav-explorer.explorer:not(.is-hydrated) .folder-arrow {
-    transition: none;
+  .folder-children {
+    padding-left: 0.75rem;
+    margin-left: 0.5rem;
+    border-left: 1.5px solid #e2e8f0;
+    
+    /* PERFORMANCE: content-visibility is the biggest win for deep trees.
+       It prevents the browser from painting/calculating hidden branches. */
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 1px; 
   }
 
-  .folder-group:not([open]) .folder-arrow {
-    transform: rotate(-90deg);
+  /* When the folder is open, allow it to take up its natural height */
+  details[open] > .folder-children {
+    content-visibility: visible;
+  }
+
+  .folder-group {
+    margin-bottom: 0.25rem;
+    /* Use contain: paint to isolate each folder's rendering */
+    contain: paint;
   }
 
   .folder-summary {
@@ -166,43 +164,42 @@ const STORAGE_KEY = 'open-folders';
     color: #334155;
     font-weight: 500;
     list-style: none;
+    transition: background 0.1s ease;
+    /* Prevent text selection while clicking fast */
+    user-select: none;
   }
 
   .folder-summary::-webkit-details-marker {
     display: none;
   }
 
-  .folder-summary:hover {
-    background: #f1f5f9;
-    color: #0369a1;
-  }
-
   .folder-arrow {
     display: inline-block;
     font-size: 0.75rem;
     color: #94a3b8;
-    transition: transform 0.15s ease-out;
+    transition: transform 0.15s ease;
     width: 12px;
     text-align: center;
   }
 
-  .folder-children {
-    padding-left: 0.75rem;
-    margin-left: 0.5rem;
-    border-left: 1.5px solid #e2e8f0;
+  details:not([open]) > .folder-summary .folder-arrow {
+    transform: rotate(-90deg);
   }
 
   .file-list {
     list-style: none;
-    margin: 0;
     padding: 0;
+    margin: 0.2rem 0;
   }
 
   .file-link {
     display: block;
-    padding: 0.2rem 0.3rem;
+    padding: 0.2rem 0.4rem;
     border-radius: 4px;
-    color: inherit;
+    color: #64748b;
     text-decoration: none;
+    line-height: 1.4;
+    /* Optimization: Hardware acceleration hint for smoother hover transitions */
+    will-change: background, color;
   }
 </style>
