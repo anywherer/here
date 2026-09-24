@@ -13,7 +13,6 @@ export async function getStaticPaths() {
 
   return [...rooms.entries()].map(([param, parts]) => {
     const here = notes.filter((note) =>
-      note.folderParts.length === parts.length &&
       parts.every((part, i) => note.folderParts[i] === part)
     );
 
@@ -63,7 +62,7 @@ const title = parts[parts.length - 1] ?? 'house';
 
   <h1 class="folder-heading">{title}</h1>
   <p class="folder-count">
-    {notes.length} {notes.length === 1 ? 'note' : 'notes'} in this room
+    {notes.length} {notes.length === 1 ? 'note' : 'notes'} in this room and under it
     {children.length > 0 && `, ${children.length} ${children.length === 1 ? 'door' : 'doors'} further in`}.
   </p>
 

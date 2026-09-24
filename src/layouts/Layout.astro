@@ -59,6 +59,8 @@ const canonical = new URL(canonicalPath ?? Astro.url.pathname, Astro.site ?? SIT
         if (!(link instanceof HTMLAnchorElement)) return;
         const href = link.getAttribute('href') || '';
         if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+        if (link.protocol === 'mailto:' || link.protocol === 'tel:') return;
+        if (link.origin === window.location.origin) return;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
       }, true);
