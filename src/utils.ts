@@ -1,3 +1,5 @@
+import { readdir } from 'node:fs/promises';
+import path from 'node:path';
 import { getCollection, type CollectionEntry } from 'astro:content';
 
 export type Post = CollectionEntry<'posts'>;
@@ -22,6 +24,8 @@ export function slugify(text: string): string {
 }
 
 export function isPublished(post: Post): boolean {
+  const filename = post.id.split('/').pop() || '';
+  if (filename.startsWith('_')) return false;
   return post.data.publish === true && Boolean(post.data.published);
 }
 
@@ -74,6 +78,44 @@ export async function getPublishedNotes(): Promise<Note[]> {
   return posts
     .map((entry) => ({ entry, ...getPostMetadata(entry) }))
     .sort((a, b) => b.date.getTime() - a.date.getTime());
+}
+
+function roomKey(parts: string[]) {
+  return parts.join('\0');
+}
+
+export async function getHouseRooms(): Promise<string[][]> {
+  const rooms = new Map<string, string[]>();
+
+  const root = path.resolve('./src/content/posts');
+
+  async function walk(dir: string, parts: string[]) {
+    if (parts.length > 0) rooms.set(roomKey(parts), parts);
+
+    let entries;
+    try {
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
+      await walk(path.join(dir, entry.name), [...parts, entry.name]);
+    }
+  }
+
+  await walk(root, []);
+
+  const notes = await getPublishedNotes();
+  for (const note of notes) {
+    for (let depth = 1; depth <= note.folderParts.length; depth += 1) {
+      const parts = note.folderParts.slice(0, depth);
+      rooms.set(roomKey(parts), parts);
+    }
+  }
+
+  return [...rooms.values()];
 }
 
 export function collectRoutes(notes: Note[]) {

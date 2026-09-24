@@ -1,5 +1,5 @@
 ---
-import { getFolderHref, getPublishedNotes } from '../utils';
+import { getFolderHref, getHouseRooms, getPublishedNotes } from '../utils';
 
 interface TreeNode {
   name: string;
@@ -9,22 +9,30 @@ interface TreeNode {
 }
 
 const notes = await getPublishedNotes();
+const rooms = await getHouseRooms();
 const root: TreeNode = { name: '', parts: [], folders: new Map(), files: [] };
 
-for (const note of notes) {
+function ensureRoom(parts: string[]) {
   let current = root;
-  for (const segment of note.folderParts) {
+  for (const segment of parts) {
     if (!current.folders.has(segment)) {
-      const parts = [...current.parts, segment];
+      const nextParts = [...current.parts, segment];
       current.folders.set(segment, {
         name: segment,
-        parts,
+        parts: nextParts,
         folders: new Map(),
         files: [],
       });
     }
     current = current.folders.get(segment)!;
   }
+  return current;
+}
+
+for (const parts of rooms) ensureRoom(parts);
+
+for (const note of notes) {
+  const current = ensureRoom(note.folderParts);
   current.files.push({
     title: note.title,
     slug: note.slug,

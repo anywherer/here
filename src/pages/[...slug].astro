@@ -1,6 +1,7 @@
 ---
 import { render } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
+import { SITE } from '../site';
 import { collectRoutes, folderTrail, formatDate, getPublishedNotes, getTagSlug } from '../utils';
 
 export async function getStaticPaths() {
@@ -44,6 +45,9 @@ const description = note.entry.data.description || `${note.title} — a note fro
 
     <div class="markdown-body">
       <Content />
+      <p>
+        <a href={`mailto:${SITE.authorEmail}?subject=${encodeURIComponent(`[Reply] ${note.title}`)}`}>Reply by email</a>
+      </p>
     </div>
   </article>
 </Layout>
