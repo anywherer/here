@@ -2,10 +2,9 @@
 title: 
 description: 
 aliases: 
-tags:
-  - tiny
+tags: 
 created: 2024-11-07T19:08:01
-modified: 2026-09-21T13:44:42
+modified: 2026-09-21T18:33:10
 publish: true
 published: 2025-05-01
 permalink: sometimes

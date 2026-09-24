@@ -2,11 +2,9 @@
 title: 
 description: 
 aliases: 
-tags:
-  - poem
-  - tiny
+tags: 
 created: 2025-02-23T18:46:47
-modified: 2026-09-17T20:26:20
+modified: 2026-09-21T18:33:57
 publish: true
 published: 2025-02-23
 permalink: i have no idea what you're doing

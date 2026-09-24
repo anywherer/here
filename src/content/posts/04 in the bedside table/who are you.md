@@ -2,10 +2,9 @@
 title: 
 description: 
 aliases: 
-tags:
-  - introspection
+tags: 
 created: 2025-08-11T21:37:25
-modified: 2026-09-17T20:25:17
+modified: 2026-09-21T18:33:25
 publish: true
 published: 2025-08-11
 permalink: who are you

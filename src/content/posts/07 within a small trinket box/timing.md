@@ -2,11 +2,9 @@
 title: 
 description: 
 aliases: 
-tags:
-  - mechanic
-  - tiny
+tags: 
 created: 2025-07-24T18:48:36
-modified: 2026-09-17T20:26:28
+modified: 2026-09-21T18:32:48
 publish: true
 published: 2025-07-24
 permalink: timing

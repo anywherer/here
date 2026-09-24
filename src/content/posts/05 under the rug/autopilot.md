@@ -5,7 +5,7 @@ aliases:
 tags:
   - mechanic
 created: 2025-10-08T14:28:52
-modified: 2026-09-17T20:25:30
+modified: 2026-09-21T18:33:31
 publish: true
 published: 2025-10-07
 permalink: autopilot

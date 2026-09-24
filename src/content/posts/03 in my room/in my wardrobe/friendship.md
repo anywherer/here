@@ -2,10 +2,9 @@
 title: 
 description: 
 aliases: 
-tags:
-  - mechanic
+tags: 
 created: 2024-11-27T19:21:08
-modified: 2026-09-17T19:07:42
+modified: 2026-09-21T18:33:04
 publish: true
 published: 2025-08-12
 permalink: friendship

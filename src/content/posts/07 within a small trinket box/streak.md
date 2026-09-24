@@ -2,11 +2,9 @@
 title: 
 description: 
 aliases: 
-tags:
-  - mechanic
-  - tiny
+tags: 
 created: 2025-08-11T19:53:12
-modified: 2026-09-17T19:05:44
+modified: 2026-09-21T18:32:30
 publish: true
 published: 2025-08-11
 permalink: streak

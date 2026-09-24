@@ -5,7 +5,7 @@ aliases:
 tags:
   - health
 created: 2025-10-14T16:00:00
-modified: 2026-09-17T20:26:12
+modified: 2026-09-21T18:32:48
 publish: true
 published: 2025-10-14
 permalink: walk slowly
