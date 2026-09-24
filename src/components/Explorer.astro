@@ -1,5 +1,5 @@
 ---
-import { getFolderHref, getHouseRooms, getPublishedNotes } from '../utils';
+import { folderPathKey, getHouseRooms, getPublishedNotes, prettyFolderSegment, slugify } from '../utils';
 
 interface TreeNode {
   name: string;
@@ -15,16 +15,18 @@ const root: TreeNode = { name: '', parts: [], folders: new Map(), files: [] };
 function ensureRoom(parts: string[]) {
   let current = root;
   for (const segment of parts) {
-    if (!current.folders.has(segment)) {
-      const nextParts = [...current.parts, segment];
-      current.folders.set(segment, {
-        name: segment,
-        parts: nextParts,
+    const key = slugify(segment);
+    const name = prettyFolderSegment(segment);
+    if (!current.folders.has(key)) {
+      current.folders.set(key, {
+        name,
+        parts: [...current.parts, name],
         folders: new Map(),
         files: [],
       });
     }
-    current = current.folders.get(segment)!;
+    current = current.folders.get(key)!;
+    if (name.includes(' ') && current.name !== name) current.name = name;
   }
   return current;
 }
@@ -52,18 +54,17 @@ function escapeHtml(value: string): string {
 function renderTree(node: TreeNode): string {
   const buffer: string[] = [];
 
-  const rooms = [...node.folders.values()].sort((a, b) =>
+  const childRooms = [...node.folders.values()].sort((a, b) =>
     a.name.localeCompare(b.name, undefined, { numeric: true })
   );
 
-  for (const room of rooms) {
-    const href = getFolderHref(room.parts);
-    const path = room.parts.join(' › ');
+  for (const room of childRooms) {
+    const path = folderPathKey(room.parts);
     buffer.push(`
       <details class="folder-group" data-path="${escapeHtml(path)}">
         <summary class="folder-summary">
           <span class="folder-arrow" aria-hidden="true">▾</span>
-          <a class="folder-name" href="${escapeHtml(href)}">${escapeHtml(room.name)}</a>
+          <span class="folder-name">${escapeHtml(room.name)}</span>
         </summary>
         <div class="folder-children">
           ${renderTree(room)}
@@ -78,7 +79,7 @@ function renderTree(node: TreeNode): string {
     for (const file of files) {
       buffer.push(`
         <li class="file-item">
-          <a href="/${escapeHtml(file.slug)}" class="file-link">${escapeHtml(file.title)}</a>
+          <a href="/${escapeHtml(file.slug)}" class="file-link" data-astro-prefetch>${escapeHtml(file.title)}</a>
         </li>
       `);
     }
@@ -99,31 +100,30 @@ const treeHtml = renderTree(root);
 <script>
   class NavExplorer extends HTMLElement {
     private KEY = 'open-folders';
+    private bound = false;
 
     connectedCallback() {
       this.restoreState();
+      if (this.bound) return;
+      this.bound = true;
 
       this.addEventListener('toggle', (e) => {
-        const el = e.target as HTMLDetailsElement;
+        const el = e.target;
+        if (!(el instanceof HTMLDetailsElement)) return;
         const path = el.dataset.path;
         if (path) this.saveState(path, el.open);
       }, true);
-
-      this.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        if (target.closest('.folder-name')) e.stopPropagation();
-      });
     }
 
     private restoreState() {
       try {
         const saved = localStorage.getItem(this.KEY);
         if (!saved) return;
-
-        const openFolders = JSON.parse(saved) as string[];
+        const openFolders = JSON.parse(saved);
         if (!Array.isArray(openFolders)) return;
 
         for (const path of openFolders) {
+          if (typeof path !== 'string') continue;
           const folder = this.querySelector(`details[data-path="${CSS.escape(path)}"]`);
           if (folder instanceof HTMLDetailsElement) folder.open = true;
         }
@@ -136,8 +136,8 @@ const treeHtml = renderTree(root);
       if (!path) return;
       let openFolders: string[] = [];
       try {
-        openFolders = JSON.parse(localStorage.getItem(this.KEY) || '[]');
-        if (!Array.isArray(openFolders)) openFolders = [];
+        const parsed = JSON.parse(localStorage.getItem(this.KEY) || '[]');
+        if (Array.isArray(parsed)) openFolders = parsed.filter((item) => typeof item === 'string');
       } catch {
         openFolders = [];
       }
@@ -208,14 +208,8 @@ const treeHtml = renderTree(root);
   }
 
   .folder-name {
-    color: inherit;
-    text-decoration: none;
     min-width: 0;
     overflow-wrap: anywhere;
-  }
-
-  .folder-name:hover {
-    text-decoration: underline;
   }
 
   .file-list {

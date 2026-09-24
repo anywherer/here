@@ -1,27 +1,22 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import NoteList from '../../components/NoteList.astro';
-import { folderTrail, getFolderHref, getHouseRooms, getPublishedNotes, slugify } from '../../utils';
+import { folderContains, folderPathKey, folderTrail, foldersMatch, getFolderHref, getHouseRooms, getPublishedNotes, prettyFolderParts } from '../../utils';
 
 export async function getStaticPaths() {
   const notes = await getPublishedNotes();
   const rooms = new Map<string, string[]>();
 
   for (const parts of await getHouseRooms()) {
-    rooms.set(parts.map(slugify).join('/'), parts);
+    rooms.set(folderPathKey(parts), prettyFolderParts(parts));
   }
 
   return [...rooms.entries()].map(([param, parts]) => {
-    const here = notes.filter((note) =>
-      parts.every((part, i) => note.folderParts[i] === part)
-    );
+    const here = notes.filter((note) => folderContains(note.folderParts, parts));
 
     const childNames = new Set<string>();
     for (const room of rooms.values()) {
-      if (
-        room.length === parts.length + 1 &&
-        parts.every((part, i) => room[i] === part)
-      ) {
+      if (room.length === parts.length + 1 && foldersMatch(room.slice(0, parts.length), parts)) {
         childNames.add(room[parts.length]);
       }
     }
