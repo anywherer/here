@@ -1,65 +1,36 @@
 ---
-import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
-import { getPostMetadata, isPublished, formatDate } from '../../utils';
+import NoteList from '../../components/NoteList.astro';
+import { getPublishedNotes, getTagSlug } from '../../utils';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('posts', isPublished);
-  const tags = [...new Set(posts.flatMap((p) => p.data.tags))];
+  const notes = await getPublishedNotes();
+  const tags = [...new Set(notes.flatMap((note) => note.tags))];
+
   return tags.map((tag) => ({
-    params: { tag },
+    params: { tag: getTagSlug(tag) },
     props: {
       tag,
-      // Find and sort all posts with this tag
-      posts: posts
-        .filter((p) => p.data.tags.includes(tag))
-        .map((p) => ({ entry: p, ...getPostMetadata(p) }))
-        .sort((a, b) => b.date.getTime() - a.date.getTime()),
+      notes: notes.filter((note) => note.tags.includes(tag)),
     },
   }));
 }
 
-const { tag, posts } = Astro.props;
+const { tag, notes } = Astro.props;
 ---
 
-<Layout title={`#${tag}`}>
+<Layout title={`#${tag}`} description={`${notes.length} notes tagged ${tag}.`}>
   <nav class="breadcrumbs">
     <a href="/">Home</a> › <span>tags</span> › <span>#{tag}</span>
   </nav>
 
-  <h1 class="folder-heading">Tag: #{tag}</h1>
-  <p class="folder-count">{posts.length} items with this tag.</p>
+  <h1 class="folder-heading">#{tag}</h1>
+  <p class="folder-count">{notes.length} items with this tag.</p>
 
-  <div class="item-list">
-    {posts.map((post) => (
-      <div class="item-row">
-        <!-- Exact published date -->
-        <time class="item-date">{formatDate(post.date)}</time>
-
-        <!-- Root Permalink URL: /write-drunk-edit-sober -->
-        <a href={`/${post.slug}`} class="item-title">{post.title}</a>
-
-        <!-- Tag Badges -->
-        <div class="item-tags">
-          {post.entry.data.tags.map((t) => (
-            <a href={`/tags/${t}`} class="tag-badge">#{t}</a>
-          ))}
-        </div>
-      </div>
-    ))}
-  </div>
+  <NoteList notes={notes} />
 </Layout>
 
 <style>
-  .breadcrumbs {
-    font-size: 0.85rem;
-    color: #0f4c81;
-    margin-bottom: 1rem;
-  }
-  .breadcrumbs a {
-    color: inherit;
-    text-decoration: none;
-  }
   .folder-heading {
     font-size: 1.75rem;
     font-weight: 800;
@@ -69,32 +40,5 @@ const { tag, posts } = Astro.props;
     color: #4b5563;
     font-size: 0.9rem;
     margin-bottom: 2rem;
-  }
-  .item-list {
-    border-top: 1px solid #eee;
-  }
-  .item-row {
-    display: grid;
-    grid-template-columns: 120px 1fr auto;
-    align-items: center;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid #f3f4f6;
-    gap: 1rem;
-  }
-  .item-date {
-    font-size: 0.85rem;
-    color: #6b7280;
-  }
-  .item-title {
-    font-weight: 700;
-    color: #0369a1;
-    text-decoration: none;
-  }
-  .item-title:hover {
-    text-decoration: underline;
-  }
-  .item-tags {
-    display: flex;
-    gap: 0.25rem;
   }
 </style>

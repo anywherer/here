@@ -1,71 +1,36 @@
 ---
-import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
-import { getPostMetadata, isPublished, formatDate, slugify } from '../../utils';
+import NoteList from '../../components/NoteList.astro';
+import { getFolderSlug, getPublishedNotes } from '../../utils';
 
 export async function getStaticPaths() {
-  // 1. Only collect published posts
-  const posts = await getCollection('posts', isPublished);
+  const notes = await getPublishedNotes();
+  const folders = [...new Set(notes.map((note) => note.folder))];
 
-  // 2. Find all unique folder names across published posts
-  const folders = [...new Set(posts.map((p) => getPostMetadata(p).folder))];
-
-  // 3. Generate a page for each folder (e.g. /folders/03-atop-a-pile-of-plushies-on-the-bed)
-  return folders.map((folder) => ({
-    params: { folder: slugify(folder) },
-    props: { folderName: folder },
+  return folders.map((folderName) => ({
+    params: { folder: getFolderSlug(folderName) },
+    props: {
+      folderName,
+      notes: notes.filter((note) => note.folder === folderName),
+    },
   }));
 }
 
-const { folderName } = Astro.props;
-
-// Get all published posts and filter for only the ones in THIS folder
-const allPosts = await getCollection('posts', isPublished);
-const posts = allPosts
-  .filter((p) => getPostMetadata(p).folder === folderName)
-  .map((p) => ({ entry: p, ...getPostMetadata(p) }))
-  .sort((a, b) => b.date.getTime() - a.date.getTime()); // newest first
+const { folderName, notes } = Astro.props;
 ---
 
-<Layout title={`${folderName}`}>
-  <!-- Breadcrumb navigation -->
+<Layout title={folderName} description={`${notes.length} notes in ${folderName}.`}>
   <nav class="breadcrumbs">
     <a href="/">Home</a> › <span>{folderName}</span>
   </nav>
 
-  <h1 class="folder-heading">Folder: {slugify(folderName)}</h1>
-  <p class="folder-count">{posts.length} items under this folder.</p>
+  <h1 class="folder-heading">{folderName}</h1>
+  <p class="folder-count">{notes.length} items under this folder.</p>
 
-  <div class="item-list">
-    {posts.map((post) => (
-      <div class="item-row">
-        <!-- Exact published date -->
-        <time class="item-date">{formatDate(post.date)}</time>
-
-        <!-- Root Permalink URL: /write-drunk-edit-sober -->
-        <a href={`/${post.slug}`} class="item-title">{post.title}</a>
-
-        <!-- Tag Badges -->
-        <div class="item-tags">
-          {post.entry.data.tags.map((t) => (
-            <a href={`/tags/${t}`} class="tag-badge">#{t}</a>
-          ))}
-        </div>
-      </div>
-    ))}
-  </div>
+  <NoteList notes={notes} />
 </Layout>
 
 <style>
-  .breadcrumbs {
-    font-size: 0.85rem;
-    color: #0f4c81;
-    margin-bottom: 1rem;
-  }
-  .breadcrumbs a {
-    color: inherit;
-    text-decoration: none;
-  }
   .folder-heading {
     font-size: 1.75rem;
     font-weight: 800;
@@ -75,32 +40,5 @@ const posts = allPosts
     color: #4b5563;
     font-size: 0.9rem;
     margin-bottom: 2rem;
-  }
-  .item-list {
-    border-top: 1px solid #eee;
-  }
-  .item-row {
-    display: grid;
-    grid-template-columns: 120px 1fr auto;
-    align-items: center;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid #f3f4f6;
-    gap: 1rem;
-  }
-  .item-date {
-    font-size: 0.85rem;
-    color: #6b7280;
-  }
-  .item-title {
-    font-weight: 700;
-    color: #0369a1;
-    text-decoration: none;
-  }
-  .item-title:hover {
-    text-decoration: underline;
-  }
-  .item-tags {
-    display: flex;
-    gap: 0.25rem;
   }
 </style>

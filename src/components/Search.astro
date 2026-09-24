@@ -1,20 +1,17 @@
 <search-box>
   <div class="search-box">
-    <div class="input-wrapper">
-      <input
-        class="search-input"
-        type="search"
-        placeholder="Search notes... (Press '/' to focus)"
-        autocomplete="off"
-        spellcheck="false"
-        aria-label="Search notes"
-        aria-expanded="false"
-        aria-controls="search-results"
-      />
-      <span class="search-spinner" aria-hidden="true"></span>
-    </div>
-
-    <div id="search-results" class="results-box" role="region" aria-live="polite"></div>
+    <input
+      class="search-input"
+      type="search"
+      placeholder="Search notes… (/)"
+      autocomplete="off"
+      spellcheck="false"
+      aria-label="Search notes"
+      aria-expanded="false"
+      aria-controls="search-results"
+      aria-autocomplete="list"
+    />
+    <div id="search-results" class="results-box" role="listbox" aria-live="polite"></div>
   </div>
 </search-box>
 
@@ -24,9 +21,9 @@
     slug: string;
     desc: string;
     body: string;
+    tags: string[];
   }
 
-  // Module-level cache: survives Astro ClientRouter page transitions!
   let cachedIndex: SearchItem[] | null = null;
   let fetchPromise: Promise<SearchItem[]> | null = null;
 
@@ -39,7 +36,7 @@
           if (!res.ok) throw new Error('Failed to load search index');
           return res.json();
         })
-        .then((data) => {
+        .then((data: SearchItem[]) => {
           cachedIndex = data;
           return data;
         })
@@ -58,6 +55,7 @@
     private resultsBox!: HTMLElement;
     private debounceTimer?: number;
     private abortController?: AbortController;
+    private activeIndex = -1;
 
     connectedCallback() {
       this.input = this.querySelector('.search-input')!;
@@ -65,149 +63,174 @@
       this.abortController = new AbortController();
       const { signal } = this.abortController;
 
-      // 1. Prefetch index as soon as user hovers or focuses
-      const prefetch = () => loadSearchIndex();
+      const prefetch = () => { loadSearchIndex(); };
       this.input.addEventListener('focus', prefetch, { once: true, signal });
       this.input.addEventListener('pointerenter', prefetch, { once: true, signal });
 
-      // 2. Debounced search input
-      this.input.addEventListener(
-        'input',
-        () => {
-          window.clearTimeout(this.debounceTimer);
-          this.debounceTimer = window.setTimeout(() => this.handleSearch(), 120);
-        },
-        { signal }
-      );
+      this.input.addEventListener('input', () => {
+        window.clearTimeout(this.debounceTimer);
+        this.debounceTimer = window.setTimeout(() => this.handleSearch(), 120);
+      }, { signal });
 
-      // 3. Escape key to clear & close
-      this.input.addEventListener(
-        'keydown',
-        (e) => {
-          if (e.key === 'Escape') {
-            this.clearResults();
-            this.input.blur();
-          }
-        },
-        { signal }
-      );
+      this.input.addEventListener('keydown', (e) => {
+        const items = [...this.resultsBox.querySelectorAll<HTMLAnchorElement>('.item-link')];
 
-      // 4. Click outside to dismiss
-      document.addEventListener(
-        'pointerdown',
-        (e) => {
-          if (!this.contains(e.target as Node)) {
-            this.clearResults();
-          }
-        },
-        { signal }
-      );
+        if (e.key === 'Escape') {
+          this.clearResults();
+          this.input.blur();
+          return;
+        }
 
-      // 5. Global '/' shortcut to focus search
-      window.addEventListener(
-        'keydown',
-        (e) => {
-          if (
-            e.key === '/' &&
-            document.activeElement !== this.input &&
-            !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName || '')
-          ) {
-            e.preventDefault();
-            this.input.focus();
-          }
-        },
-        { signal }
-      );
+        if (e.key === 'ArrowDown' && items.length) {
+          e.preventDefault();
+          this.activeIndex = Math.min(this.activeIndex + 1, items.length - 1);
+          this.syncActive(items);
+          return;
+        }
+
+        if (e.key === 'ArrowUp' && items.length) {
+          e.preventDefault();
+          this.activeIndex = Math.max(this.activeIndex - 1, 0);
+          this.syncActive(items);
+          return;
+        }
+
+        if (e.key === 'Enter' && this.activeIndex >= 0 && items[this.activeIndex]) {
+          e.preventDefault();
+          items[this.activeIndex].click();
+        }
+      }, { signal });
+
+      document.addEventListener('pointerdown', (e) => {
+        if (!this.contains(e.target as Node)) this.clearResults();
+      }, { signal });
+
+      window.addEventListener('keydown', (e) => {
+        if (
+          e.key === '/' &&
+          !e.metaKey &&
+          !e.ctrlKey &&
+          document.activeElement !== this.input &&
+          !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName || '')
+        ) {
+          e.preventDefault();
+          this.input.focus();
+        }
+      }, { signal });
     }
 
     disconnectedCallback() {
-      // Cleans up event listeners automatically when ClientRouter removes this page
       this.abortController?.abort();
       window.clearTimeout(this.debounceTimer);
     }
 
     private clearResults() {
       this.resultsBox.innerHTML = '';
+      this.activeIndex = -1;
       this.input.setAttribute('aria-expanded', 'false');
+    }
+
+    private syncActive(items: HTMLAnchorElement[]) {
+      items.forEach((item, i) => {
+        item.classList.toggle('is-active', i === this.activeIndex);
+        if (i === this.activeIndex) item.scrollIntoView({ block: 'nearest' });
+      });
+    }
+
+    private score(item: SearchItem, q: string) {
+      const title = item.title.toLowerCase();
+      const desc = item.desc.toLowerCase();
+      const tags = item.tags.join(' ').toLowerCase();
+      const body = item.body.toLowerCase();
+
+      if (title === q) return 100;
+      if (title.startsWith(q)) return 80;
+      if (title.includes(q)) return 60;
+      if (tags.includes(q)) return 40;
+      if (desc.includes(q)) return 25;
+      if (body.includes(q)) return 10;
+      return 0;
     }
 
     private async handleSearch() {
       const q = this.input.value.trim().toLowerCase();
+      this.activeIndex = -1;
 
       if (!q) {
         this.clearResults();
         return;
       }
 
-      this.classList.add('loading');
       const items = await loadSearchIndex();
-      this.classList.remove('loading');
-
-      const matches = items.filter(
-        (item) =>
-          item.title.toLowerCase().includes(q) ||
-          item.desc.toLowerCase().includes(q) ||
-          item.body.toLowerCase().includes(q)
-      );
+      const matches = items
+        .map((item) => ({ item, score: this.score(item, q) }))
+        .filter((row) => row.score > 0)
+        .sort((a, b) => b.score - a.score || a.item.title.localeCompare(b.item.title))
+        .slice(0, 8)
+        .map((row) => row.item);
 
       if (matches.length === 0) {
-        this.resultsBox.innerHTML = `<div class="no-res">No matches found for "<strong>${this.escapeHTML(q)}</strong>"</div>`;
+        this.resultsBox.innerHTML = `<div class="no-res">No matches for “${this.escapeHTML(q)}”</div>`;
         this.input.setAttribute('aria-expanded', 'true');
         return;
       }
 
-      this.resultsBox.innerHTML = matches
-        .slice(0, 6)
-        .map((item) => {
-          let matchType: 'title' | 'description' | 'content' = 'title';
-          let snippet = '';
+      this.resultsBox.innerHTML = matches.map((item) => {
+        const title = item.title.toLowerCase();
+        const desc = item.desc.toLowerCase();
+        const body = item.body.toLowerCase();
 
-          const t = item.title.toLowerCase();
-          const d = item.desc.toLowerCase();
-          const b = item.body.toLowerCase();
+        let kind = 'title';
+        let snippet = '';
 
-          if (t.includes(q)) {
-            matchType = 'title';
-          } else if (d.includes(q)) {
-            matchType = 'description';
-            const idx = d.indexOf(q);
-            snippet = this.createSnippet(item.desc, idx, q.length);
-          } else if (b.includes(q)) {
-            matchType = 'content';
-            const idx = b.indexOf(q);
-            snippet = this.createSnippet(item.body, idx, q.length);
-          }
+        if (title.includes(q)) {
+          kind = 'title';
+        } else if (item.tags.some((t) => t.toLowerCase().includes(q))) {
+          kind = 'tag';
+        } else if (desc.includes(q)) {
+          kind = 'description';
+          snippet = this.createSnippet(item.desc, desc.indexOf(q), q);
+        } else {
+          kind = 'content';
+          snippet = this.createSnippet(item.body, body.indexOf(q), q);
+        }
 
-          return `
-            <a href="/${item.slug}" class="item-link">
-              <div class="item-head">
-                <span class="title">${this.escapeHTML(item.title)}</span>
-                <span class="badge ${matchType}">${matchType}</span>
-              </div>
-              ${snippet ? `<div class="snippet">${snippet}</div>` : ''}
-            </a>
-          `;
-        })
-        .join('');
+        return `
+          <a href="/${item.slug}" class="item-link" role="option">
+            <div class="item-head">
+              <span class="title">${this.highlight(item.title, q)}</span>
+              <span class="badge ${kind}">${kind}</span>
+            </div>
+            ${snippet ? `<div class="snippet">${snippet}</div>` : ''}
+          </a>
+        `;
+      }).join('');
 
       this.input.setAttribute('aria-expanded', 'true');
     }
 
-    private createSnippet(text: string, index: number, queryLen: number): string {
-      const start = Math.max(0, index - 25);
-      const end = Math.min(text.length, index + queryLen + 40);
-      const raw = (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '');
-      return this.escapeHTML(raw);
+    private createSnippet(text: string, index: number, query: string): string {
+      if (index < 0) return '';
+      const start = Math.max(0, index - 28);
+      const end = Math.min(text.length, index + query.length + 42);
+      const raw = `${start > 0 ? '…' : ''}${text.slice(start, end)}${end < text.length ? '…' : ''}`;
+      return this.highlight(raw, query);
+    }
+
+    private highlight(text: string, query: string): string {
+      const escaped = this.escapeHTML(text);
+      const safeQ = this.escapeHTML(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      if (!safeQ) return escaped;
+      return escaped.replace(new RegExp(safeQ, 'ig'), (match) => `<mark>${match}</mark>`);
     }
 
     private escapeHTML(str: string): string {
-      return str.replace(/[&<>'"]/g, 
-        (tag) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-      );
+      return str.replace(/[&<>'"]/g, (ch) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[ch] || ch
+      ));
     }
   }
 
-  // Register only once
   if (!customElements.get('search-box')) {
     customElements.define('search-box', SearchBox);
   }
@@ -219,14 +242,6 @@
     position: relative;
     margin-bottom: 1.5rem;
   }
-  .search-box {
-    position: relative;
-  }
-  .input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
   .search-input {
     width: 100%;
     padding: 0.55rem 0.75rem;
@@ -235,10 +250,9 @@
     border-radius: 8px;
     font-size: 0.9rem;
     outline: none;
-    transition: all 0.15s ease;
   }
   .search-input:focus {
-    background: #ffffff;
+    background: #fff;
     border-color: #0284c7;
     box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
   }
@@ -250,26 +264,24 @@
     z-index: 50;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
-    background: #ffffff;
+    gap: 0.2rem;
+    background: #fff;
     border-radius: 8px;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    max-height: 22rem;
+    overflow: auto;
   }
-  .results-box:empty {
-    display: none;
-  }
+  .results-box:empty { display: none; }
   .item-link {
     display: block;
     padding: 0.6rem 0.8rem;
-    border: 1px solid transparent;
-    border-radius: 6px;
     text-decoration: none;
     color: inherit;
-    transition: background 0.1s ease;
+    border-radius: 6px;
   }
-  .item-link:hover {
+  .item-link:hover,
+  .item-link.is-active {
     background: #f0f9ff;
-    border-color: #bae6fd;
   }
   .item-head {
     display: flex;
@@ -290,6 +302,7 @@
     text-transform: uppercase;
   }
   .badge.title { background: #e0f2fe; color: #0369a1; }
+  .badge.tag { background: #dcfce7; color: #166534; }
   .badge.description { background: #fef3c7; color: #b45309; }
   .badge.content { background: #f1f5f9; color: #475569; }
   .snippet {
@@ -297,6 +310,12 @@
     color: #64748b;
     margin-top: 0.25rem;
     line-height: 1.4;
+  }
+  .snippet :global(mark),
+  .title :global(mark) {
+    background: #fef08a;
+    color: inherit;
+    padding: 0;
   }
   .no-res {
     font-size: 0.85rem;

@@ -1,20 +1,17 @@
 ---
-import { getCollection } from 'astro:content';
-import { getPostMetadata, isPublished } from '../utils';
+import { getPublishedNotes, getFolderSlug } from '../utils';
 
 interface TreeNode {
   folders: Map<string, TreeNode>;
   files: Array<{ title: string; slug: string }>;
 }
 
-const allPosts = await getCollection('posts', isPublished);
+const notes = await getPublishedNotes();
 const root: TreeNode = { folders: new Map(), files: [] };
 
-// 1. Build tree - (Kept as is, already efficient with Maps)
-for (const post of allPosts) {
-  const { title, slug } = getPostMetadata(post);
-  const parts = post.id.split('/');
-  parts.pop(); 
+for (const note of notes) {
+  const parts = note.entry.id.split('/');
+  parts.pop();
 
   let current = root;
   for (const segment of parts) {
@@ -23,25 +20,31 @@ for (const post of allPosts) {
     }
     current = current.folders.get(segment)!;
   }
-  current.files.push({ title, slug });
+  current.files.push({ title: note.title, slug: note.slug });
 }
 
-// 2. Optimized Recursive Renderer
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function renderTree(node: TreeNode, path = ''): string {
   const buffer: string[] = [];
 
-  // Sort folders once
   const sortedFolders = Array.from(node.folders.entries())
     .sort(([a], [b]) => a.localeCompare(b));
 
   for (const [name, subFolder] of sortedFolders) {
-    const folderPath = path ? `${path}/${name}` : name;
-    // We use a data-attribute selector that is easy to target specifically
+    const folderPath = path ? `${path} › ${name}` : name;
     buffer.push(`
-      <details class="folder-group" data-path="${folderPath}">
+      <details class="folder-group" data-path="${escapeHtml(folderPath)}">
         <summary class="folder-summary">
           <span class="folder-arrow" aria-hidden="true">▾</span>
-          <span class="folder-name">${name}</span>
+          <a class="folder-name" href="/folders/${escapeHtml(getFolderSlug(folderPath))}">${escapeHtml(name)}</a>
         </summary>
         <div class="folder-children">
           ${renderTree(subFolder, folderPath)}
@@ -50,13 +53,13 @@ function renderTree(node: TreeNode, path = ''): string {
     `);
   }
 
-  const sortedFiles = node.files.sort((a, b) => a.title.localeCompare(b.title));
+  const sortedFiles = [...node.files].sort((a, b) => a.title.localeCompare(b.title));
   if (sortedFiles.length > 0) {
     buffer.push('<ul class="file-list">');
     for (const file of sortedFiles) {
       buffer.push(`
         <li class="file-item">
-          <a href="/${file.slug}" class="file-link">${file.title}</a>
+          <a href="/${escapeHtml(file.slug)}" class="file-link">${escapeHtml(file.title)}</a>
         </li>
       `);
     }
@@ -70,52 +73,86 @@ const treeHtml = renderTree(root);
 ---
 
 <nav-explorer class="explorer">
-  <div class="explorer-header" role="presentation">Explorer ▾</div>
+  <div class="explorer-header">Explorer</div>
   <div class="explorer-tree" set:html={treeHtml} />
 </nav-explorer>
 
 <script>
   class NavExplorer extends HTMLElement {
     private KEY = 'open-folders';
+    private onPageLoad = () => this.markActive();
 
     connectedCallback() {
       this.restoreState();
+      this.markActive();
 
-      // Listen for toggles via event delegation (Capture phase)
       this.addEventListener('toggle', (e) => {
         const el = e.target as HTMLDetailsElement;
         const path = el.dataset.path;
         if (path) this.saveState(path, el.open);
       }, true);
+
+      this.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('.folder-name')) e.stopPropagation();
+      });
+
+      document.addEventListener('astro:page-load', this.onPageLoad);
+    }
+
+    disconnectedCallback() {
+      document.removeEventListener('astro:page-load', this.onPageLoad);
+    }
+
+    private markActive() {
+      this.querySelectorAll('.file-link.is-active').forEach((el) => {
+        el.classList.remove('is-active');
+      });
+
+      const path = window.location.pathname.replace(/\/+$/, '') || '/';
+      const link = this.querySelector(`.file-link[href="${CSS.escape(path)}"]`);
+      if (!(link instanceof HTMLElement)) return;
+
+      link.classList.add('is-active');
+      let folder = link.closest('details');
+      while (folder) {
+        folder.open = true;
+        this.saveState(folder.dataset.path || '', true);
+        folder = folder.parentElement?.closest('details') ?? null;
+      }
     }
 
     private restoreState() {
       try {
         const saved = localStorage.getItem(this.KEY);
         if (!saved) return;
-        
+
         const openFolders = JSON.parse(saved) as string[];
         if (!Array.isArray(openFolders)) return;
 
-        // PERFORMANCE: Instead of querySelectorAll('*'), 
-        // we only find the specific folders that need to be opened.
-        // This is significantly faster for large trees.
         for (const path of openFolders) {
-          const folder = this.querySelector(`details[data-path="${CSS.escape(path)}"]`) as HTMLDetailsElement;
-          if (folder) folder.open = true;
+          const folder = this.querySelector(`details[data-path="${CSS.escape(path)}"]`);
+          if (folder instanceof HTMLDetailsElement) folder.open = true;
         }
-      } catch (e) {
-        console.error("Failed to restore explorer state", e);
+      } catch {
+        localStorage.removeItem(this.KEY);
       }
     }
 
     private saveState(path: string, isOpen: boolean) {
-      const openFolders = new Set(JSON.parse(localStorage.getItem(this.KEY) || '[]'));
-      
-      if (isOpen) openFolders.add(path);
-      else openFolders.delete(path);
+      if (!path) return;
+      let openFolders: string[] = [];
+      try {
+        openFolders = JSON.parse(localStorage.getItem(this.KEY) || '[]');
+        if (!Array.isArray(openFolders)) openFolders = [];
+      } catch {
+        openFolders = [];
+      }
 
-      localStorage.setItem(this.KEY, JSON.stringify(Array.from(openFolders)));
+      const next = new Set(openFolders);
+      if (isOpen) next.add(path);
+      else next.delete(path);
+      localStorage.setItem(this.KEY, JSON.stringify([...next]));
     }
   }
 
@@ -125,33 +162,22 @@ const treeHtml = renderTree(root);
 </script>
 
 <style is:global>
-  /* ... existing styles ... */
-  
-  .explorer-tree {
-    /* Containment hints for the browser */
-    contain: content;
+  .explorer-header {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.5rem;
+  }
+
+  .folder-group {
+    margin-bottom: 0.25rem;
   }
 
   .folder-children {
     padding-left: 0.75rem;
     margin-left: 0.5rem;
     border-left: 1.5px solid #e2e8f0;
-    
-    /* PERFORMANCE: content-visibility is the biggest win for deep trees.
-       It prevents the browser from painting/calculating hidden branches. */
-    content-visibility: auto;
-    contain-intrinsic-size: 1px 1px; 
-  }
-
-  /* When the folder is open, allow it to take up its natural height */
-  details[open] > .folder-children {
-    content-visibility: visible;
-  }
-
-  .folder-group {
-    margin-bottom: 0.25rem;
-    /* Use contain: paint to isolate each folder's rendering */
-    contain: paint;
   }
 
   .folder-summary {
@@ -164,8 +190,6 @@ const treeHtml = renderTree(root);
     color: #334155;
     font-weight: 500;
     list-style: none;
-    transition: background 0.1s ease;
-    /* Prevent text selection while clicking fast */
     user-select: none;
   }
 
@@ -173,17 +197,29 @@ const treeHtml = renderTree(root);
     display: none;
   }
 
+  .folder-summary:hover {
+    background: #f8fafc;
+  }
+
   .folder-arrow {
     display: inline-block;
     font-size: 0.75rem;
     color: #94a3b8;
-    transition: transform 0.15s ease;
     width: 12px;
     text-align: center;
   }
 
   details:not([open]) > .folder-summary .folder-arrow {
     transform: rotate(-90deg);
+  }
+
+  .folder-name {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .folder-name:hover {
+    text-decoration: underline;
   }
 
   .file-list {
@@ -199,7 +235,16 @@ const treeHtml = renderTree(root);
     color: #64748b;
     text-decoration: none;
     line-height: 1.4;
-    /* Optimization: Hardware acceleration hint for smoother hover transitions */
-    will-change: background, color;
+  }
+
+  .file-link:hover {
+    background: #f0f9ff;
+    color: #0369a1;
+  }
+
+  .file-link.is-active {
+    background: #e0f2fe;
+    color: #0369a1;
+    font-weight: 600;
   }
 </style>

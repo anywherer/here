@@ -1,6 +1,16 @@
-import type { CollectionEntry } from 'astro:content';
+import { getCollection, type CollectionEntry } from 'astro:content';
 
-// Converts "write drunk, edit sober" -> "write-drunk-edit-sober"
+export type Post = CollectionEntry<'posts'>;
+
+export type Note = {
+  entry: Post;
+  folder: string;
+  title: string;
+  slug: string;
+  date: Date;
+  tags: string[];
+};
+
 export function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -10,19 +20,13 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-// 1. GATEKEEPER: Must have publish: true (or published: true) AND a valid published date
-export function isPublished(post: CollectionEntry<'posts'>): boolean {
-  const isPublishTrue = post.data.publish === true || (post.data as any).published === true;
-  const hasDate = Boolean(post.data.published);
-  return isPublishTrue && hasDate;
+export function isPublished(post: Post): boolean {
+  return post.data.publish === true && Boolean(post.data.published);
 }
 
-// 2. EXTRACT METADATA & PERMALINK
-export function getPostMetadata(post: CollectionEntry<'posts'>) {
+export function getPostMetadata(post: Post) {
   const parts = post.id.split('/');
   const filename = parts[parts.length - 1].replace(/\.md$/, '');
-
-  // If nested: joins all folders with " › " (e.g. "03 bed › plushies")
   const folderParts = parts.slice(0, -1);
   const folder = folderParts.length > 0 ? folderParts.join(' › ') : 'front door';
 
@@ -30,11 +34,11 @@ export function getPostMetadata(post: CollectionEntry<'posts'>) {
   const slug = slugify(rawPermalink);
   const title = post.data.title || post.data.permalink || filename;
   const date = post.data.published ? new Date(post.data.published) : new Date();
+  const tags = post.data.tags ?? [];
 
-  return { folder, title, slug, date };
+  return { folder, title, slug, date, tags };
 }
 
-// 3. DATE FORMATTER (Matches "Dec 14, 2025" without timezone shifts)
 export function formatDate(date: Date): string {
   return date.toLocaleDateString('en-US', {
     timeZone: 'UTC',
@@ -42,4 +46,43 @@ export function formatDate(date: Date): string {
     month: 'short',
     day: '2-digit',
   });
+}
+
+export function getTagSlug(tag: string): string {
+  return slugify(tag);
+}
+
+export function getFolderSlug(folder: string): string {
+  return slugify(folder);
+}
+
+export async function getPublishedNotes(): Promise<Note[]> {
+  const posts = await getCollection('posts', isPublished);
+  return posts
+    .map((entry) => ({ entry, ...getPostMetadata(entry) }))
+    .sort((a, b) => b.date.getTime() - a.date.getTime());
+}
+
+export function collectRoutes(notes: Note[]) {
+  const routes = new Map<string, Note>();
+
+  const claim = (slug: string, note: Note, kind: 'permalink' | 'alias') => {
+    if (!slug) return;
+    const existing = routes.get(slug);
+    if (existing && existing.entry.id !== note.entry.id) {
+      throw new Error(
+        `Slug collision on "${slug}" (${kind}): "${existing.entry.id}" and "${note.entry.id}"`
+      );
+    }
+    if (!existing) routes.set(slug, note);
+  };
+
+  for (const note of notes) {
+    claim(note.slug, note, 'permalink');
+    for (const alias of note.entry.data.aliases) {
+      claim(slugify(alias), note, 'alias');
+    }
+  }
+
+  return routes;
 }

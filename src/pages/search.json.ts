@@ -1,30 +1,30 @@
 import type { APIRoute } from 'astro';
-import { getCollection } from 'astro:content';
-import { getPostMetadata, isPublished } from '../utils';
+import { getPublishedNotes } from '../utils';
 
 export const prerender = true;
 
+function cleanBody(raw: string): string {
+  return raw
+    .replace(/---[\s\S]*?---/, ' ')
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/!\[[^\]]*]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)]\([^)]*\)/g, '$1')
+    .replace(/[#>*_`~]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export const GET: APIRoute = async () => {
-  const posts = await getCollection('posts', isPublished);
+  const notes = await getPublishedNotes();
 
-  const searchIndex = posts.map((post) => {
-    const meta = getPostMetadata(post);
-    const rawBody = post.body || (post as any).rawContent?.() || '';
-
-    // Strip frontmatter, markdown symbols, extra whitespace, and truncate
-    const cleanBody = rawBody
-      .replace(/---[\s\S]*?---/, '')
-      .replace(/```[\s\S]*?```/g, '') // strip codeblocks to save space
-      .replace(/[#*`>~_\[\]()!-]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-
+  const searchIndex = notes.map((note) => {
+    const rawBody = note.entry.body || '';
     return {
-      title: meta.title,
-      slug: meta.slug,
-      desc: post.data.description || '',
-      // Limit indexed body length to keep payload tiny (e.g. 500-1000 chars)
-      body: cleanBody.slice(0, 1000),
+      title: note.title,
+      slug: note.slug,
+      desc: note.entry.data.description || '',
+      tags: note.tags,
+      body: cleanBody(rawBody).slice(0, 1600),
     };
   });
 
@@ -32,7 +32,6 @@ export const GET: APIRoute = async () => {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
-      // Allow browser and CDN caching
       'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
     },
   });

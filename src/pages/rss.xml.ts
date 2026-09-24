@@ -1,27 +1,17 @@
 import rss from '@astrojs/rss';
 import type { APIContext } from 'astro';
-import { getCollection } from 'astro:content';
 import sanitizeHtml from 'sanitize-html';
-import { getPostMetadata, isPublished } from '../utils';
-
-const SITE_FALLBACK = 'https://somewherer.com/';
+import { SITE } from '../site';
+import { getPublishedNotes } from '../utils';
 
 export async function GET(context: APIContext) {
-  const posts = await getCollection('posts', isPublished);
-
-  const siteUrl = withTrailingSlash(
-    context.site?.href ?? SITE_FALLBACK
-  );
+  const notes = await getPublishedNotes();
+  const siteUrl = withTrailingSlash(context.site?.href ?? SITE.fallbackUrl);
   const feedUrl = new URL('rss.xml', siteUrl).href;
 
-  const sortedPosts = posts
-    .map((post) => ({ entry: post, ...getPostMetadata(post) }))
-    .sort((a, b) => b.date.getTime() - a.date.getTime());
-
   return rss({
-    title: 'here',
-    description:
-      'Here is a little place, somewhere lonely and cute, in a world big and complicated. Welcome to some of my writings, big and small.',
+    title: SITE.title,
+    description: SITE.description,
     site: siteUrl,
     trailingSlash: false,
     xmlns: {
@@ -32,15 +22,14 @@ export async function GET(context: APIContext) {
       `<atom:link href="${xml(feedUrl)}" rel="self" type="application/rss+xml" />`,
       `<lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`,
     ].join(''),
-    items: sortedPosts.map((post) => {
-      // 2. Output slash-free path: e.g. /write-drunk-edit-sober
-      const path = `/${trimSlashes(post.slug)}`;
+    items: notes.map((note) => {
+      const path = `/${note.slug}`;
       const postUrl = new URL(path, siteUrl).href;
 
       const rawHtml =
-        (post.entry as { rendered?: { html?: string } }).rendered?.html ||
-        post.entry.body ||
-        post.entry.data.description ||
+        (note.entry as { rendered?: { html?: string } }).rendered?.html ||
+        note.entry.body ||
+        note.entry.data.description ||
         '';
 
       const cleanedHtml = sanitizeHtml(rawHtml, {
@@ -71,18 +60,15 @@ export async function GET(context: APIContext) {
       });
 
       const absoluteHtml = absolutizeHtml(cleanedHtml, postUrl, siteUrl);
-
-      const description = excerpt(
-        post.entry.data.description || toPlainText(absoluteHtml)
-      );
+      const description = excerpt(note.entry.data.description || toPlainText(absoluteHtml));
 
       return {
-        title: post.title,
-        pubDate: post.date,
+        title: note.title,
+        pubDate: note.date,
         description,
         link: path,
         guid: postUrl,
-        categories: post.entry.data.tags || [],
+        categories: note.tags,
         content: absoluteHtml,
       };
     }),
@@ -91,10 +77,6 @@ export async function GET(context: APIContext) {
 
 function withTrailingSlash(url: string) {
   return url.replace(/\/?$/, '/');
-}
-
-function trimSlashes(value: string) {
-  return value.replace(/^\/+|\/+$/g, '');
 }
 
 function xml(value: string) {
@@ -129,14 +111,8 @@ function excerpt(text: string, max = 280) {
 function absolutizeHtml(html: string, pageUrl: string, siteUrl: string) {
   const resolve = (raw: string) => {
     const value = raw.trim();
-    if (
-      !value ||
-      /^(data:|mailto:|tel:|javascript:)/i.test(value)
-    ) {
-      return raw;
-    }
+    if (!value || /^(data:|mailto:|tel:|javascript:)/i.test(value)) return raw;
     if (value.startsWith('#')) return `${pageUrl}${value}`;
-
     try {
       return new URL(value, siteUrl).href;
     } catch {

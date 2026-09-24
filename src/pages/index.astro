@@ -1,51 +1,23 @@
 ---
-import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-import { getPostMetadata, isPublished, formatDate } from '../utils';
+import NoteList from '../components/NoteList.astro';
+import { getPublishedNotes } from '../utils';
+import { SITE } from '../site';
 
-const allPosts = await getCollection('posts', isPublished);
-
-const posts = allPosts
-  .map((p) => ({ entry: p, ...getPostMetadata(p) }))
-  .sort((a, b) => b.date.getTime() - a.date.getTime());
+const notes = await getPublishedNotes();
 ---
 
-<Layout title="here">
+<Layout title={SITE.title} description={SITE.description}>
   <div class="welcome-header">
     <h1>all thoughts</h1>
-    <p>{posts.length} entries across the house, sorted by date.</p>
+    <p>{notes.length} entries across the house, sorted by date.</p>
   </div>
 
-  <div class="item-list">
-    {posts.map((post) => (
-      <div class="item-row">
-        <time class="item-date">{formatDate(post.date)}</time>
-        <a href={`/${post.slug}`} class="item-title">{post.title}</a>
-        <div class="item-tags">
-          {post.entry.data.tags.map((t) => (
-            <a href={`/tags/${t}`} class="tag-badge">#{t}</a>
-          ))}
-        </div>
-      </div>
-    ))}
-  </div>
+  <NoteList notes={notes} />
 </Layout>
 
 <style>
   .welcome-header { margin-bottom: 2rem; }
   .welcome-header h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.25rem; }
   .welcome-header p { color: #6b7280; font-size: 0.9rem; }
-  .item-list { border-top: 1px solid #eee; }
-  .item-row {
-    display: grid;
-    grid-template-columns: 120px 1fr auto;
-    align-items: center;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid #f3f4f6;
-    gap: 1rem;
-  }
-  .item-date { font-size: 0.85rem; color: #6b7280; }
-  .item-title { font-weight: 700; color: #0369a1; text-decoration: none; }
-  .item-title:hover { text-decoration: underline; }
-  .item-tags { display: flex; gap: 0.25rem; }
 </style>

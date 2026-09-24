@@ -1,46 +1,42 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { render } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-import { getPostMetadata, isPublished, formatDate } from '../utils';
+import { collectRoutes, formatDate, getFolderSlug, getPublishedNotes, getTagSlug } from '../utils';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('posts', isPublished);
+  const notes = await getPublishedNotes();
+  const routes = collectRoutes(notes);
 
-  return posts.map((post) => {
-    const { slug } = getPostMetadata(post);
-    return {
-      params: { slug },
-      props: { post },
-    };
-  });
+  return [...routes.entries()].map(([slug, note]) => ({
+    params: { slug },
+    props: { note },
+  }));
 }
 
-const { post } = Astro.props;
-const { Content } = await render(post);
-const { title, date, folder } = getPostMetadata(post);
+const { note } = Astro.props;
+const { Content } = await render(note.entry);
+const description = note.entry.data.description || `${note.title} — a note from here.`;
 ---
 
-<Layout title={`${title}`}>
+<Layout title={note.title} description={description} canonicalPath={`/${note.slug}`}>
   <article class="post-container">
-    <!-- Breadcrumbs -->
     <nav class="breadcrumbs">
-      <a href="/">Home</a> › <span>{folder}</span>
+      <a href="/">Home</a> ›
+      <a href={`/folders/${getFolderSlug(note.folder)}`}>{note.folder}</a>
     </nav>
 
-    <!-- Header -->
     <header class="post-header">
-      <h1 class="post-title">{title}</h1>
+      <h1 class="post-title">{note.title}</h1>
       <div class="post-meta">
-        <time class="post-date">{formatDate(date)}</time>
+        <time class="post-date" datetime={note.date.toISOString()}>{formatDate(note.date)}</time>
         <div class="tags">
-          {post.data.tags.map((t) => (
-            <a href={`/tags/${t}`} class="tag-badge">#{t}</a>
+          {note.tags.map((t) => (
+            <a href={`/tags/${getTagSlug(t)}`} class="tag-badge">#{t}</a>
           ))}
         </div>
       </div>
     </header>
 
-    <!-- Obsidian-Style Markdown Body -->
     <div class="markdown-body">
       <Content />
     </div>
@@ -50,19 +46,6 @@ const { title, date, folder } = getPostMetadata(post);
 <style>
   .post-container {
     max-width: 720px;
-  }
-
-  .breadcrumbs {
-    font-size: 0.85rem;
-    color: #0284c7;
-    margin-bottom: 1.25rem;
-  }
-  .breadcrumbs a {
-    color: inherit;
-    text-decoration: none;
-  }
-  .breadcrumbs a:hover {
-    text-decoration: underline;
   }
 
   .post-header {
@@ -79,6 +62,7 @@ const { title, date, folder } = getPostMetadata(post);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1rem;
     padding-bottom: 0.75rem;
     border-bottom: 1px solid #e2e8f0;
   }
@@ -88,6 +72,7 @@ const { title, date, folder } = getPostMetadata(post);
   }
   .tags {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.35rem;
   }
   .markdown-body {
@@ -96,13 +81,11 @@ const { title, date, folder } = getPostMetadata(post);
     color: #1e293b;
   }
 
-  /* SINGLE LINE BREAKS ARE PRESERVED HERE */
   .markdown-body :global(p) {
-    white-space: pre-line; /* Keeps every enter/return like Notepad */
+    white-space: pre-line;
     margin-bottom: 1rem;
   }
 
-  /* Headings: Clean, solid, Obsidian-proportioned */
   .markdown-body :global(h1),
   .markdown-body :global(h2),
   .markdown-body :global(h3),
@@ -118,20 +101,17 @@ const { title, date, folder } = getPostMetadata(post);
   .markdown-body :global(h3) { font-size: 1.15rem; }
   .markdown-body :global(h4) { font-size: 1rem; }
 
-  /* Links */
   .markdown-body :global(a) {
     color: #0284c7;
     text-decoration: underline;
     text-underline-offset: 2px;
   }
 
-  /* Obsidian-style Blockquote (simple vertical line, not italicized) */
   .markdown-body :global(blockquote) {
     margin: 1rem 0;
     padding: 0.2rem 0 0.2rem 0.9rem;
     border-left: 3px solid #cbd5e1;
     color: #475569;
-    font-style: normal;
   }
   .markdown-body :global(blockquote p) {
     margin-bottom: 0.4rem;
@@ -140,7 +120,6 @@ const { title, date, folder } = getPostMetadata(post);
     margin-bottom: 0;
   }
 
-  /* Lists */
   .markdown-body :global(ul),
   .markdown-body :global(ol) {
     margin: 0.75rem 0 1rem 0;
@@ -150,7 +129,6 @@ const { title, date, folder } = getPostMetadata(post);
     margin-bottom: 0.25rem;
   }
 
-  /* Inline Code (Obsidian gray pill) */
   .markdown-body :global(code:not(pre code)) {
     background: #f1f5f9;
     color: #b91c1c;
@@ -160,7 +138,6 @@ const { title, date, folder } = getPostMetadata(post);
     border-radius: 4px;
   }
 
-  /* Code Blocks */
   .markdown-body :global(pre) {
     margin: 1.25rem 0;
     padding: 0.85rem 1rem;
@@ -169,7 +146,7 @@ const { title, date, folder } = getPostMetadata(post);
     overflow-x: auto;
     font-size: 0.875rem;
     line-height: 1.5;
-    white-space: pre; /* Don't pre-line inside code blocks */
+    white-space: pre;
   }
   .markdown-body :global(pre code) {
     background: transparent;
@@ -177,7 +154,6 @@ const { title, date, folder } = getPostMetadata(post);
     padding: 0;
   }
 
-  /* Horizontal Rules */
   .markdown-body :global(hr) {
     border: none;
     height: 1px;
@@ -185,7 +161,6 @@ const { title, date, folder } = getPostMetadata(post);
     margin: 2rem 0;
   }
 
-  /* Images */
   .markdown-body :global(img) {
     max-width: 100%;
     height: auto;

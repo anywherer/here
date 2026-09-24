@@ -2,12 +2,17 @@
 import { ClientRouter } from 'astro:transitions';
 import Explorer from '../components/Explorer.astro';
 import Search from '../components/Search.astro';
+import { SITE } from '../site';
 
 interface Props {
   title?: string;
+  description?: string;
+  canonicalPath?: string;
 }
 
-const { title = "here" } = Astro.props;
+const { title = SITE.title, description = SITE.description, canonicalPath } = Astro.props;
+const pageTitle = title === SITE.title ? SITE.title : `${title} · ${SITE.title}`;
+const canonical = new URL(canonicalPath ?? Astro.url.pathname, Astro.site ?? SITE.fallbackUrl);
 ---
 
 <!doctype html>
@@ -16,9 +21,11 @@ const { title = "here" } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light" />
-    <title>{title}</title>
+    <meta name="description" content={description} />
+    <title>{pageTitle}</title>
+    <link rel="canonical" href={canonical} />
     <link rel="icon" href="data:," />
-    <link rel="alternate" type="application/rss+xml" title="here" href={new URL("rss.xml", Astro.site)} />
+    <link rel="alternate" type="application/rss+xml" title={SITE.title} href={new URL('rss.xml', Astro.site ?? SITE.fallbackUrl)} />
     <ClientRouter />
   </head>
   <body>
@@ -36,7 +43,7 @@ const { title = "here" } = Astro.props;
 
       <aside class="sidebar" aria-label="Site" transition:persist="sidebar">
         <header>
-          <a href="/" class="brand">here</a>
+          <a href="/" class="brand">{SITE.title}</a>
         </header>
         <Search />
         <nav aria-label="Notes">
@@ -55,24 +62,21 @@ const { title = "here" } = Astro.props;
     --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  /* Kill the giant root snapshot so only main actually transitions */
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation: none;
     mix-blend-mode: normal;
   }
 
-  header, nav, footer, .chrome, .sidebar {
+  header, nav, footer, .sidebar {
     view-transition-name: none;
   }
 
-  /* Old content: gone immediately. No fade, no slide. */
   ::view-transition-old(main-content) {
     animation: none !important;
     display: none;
   }
 
-  /* New content: already in place, starts dim, eases hard to 1 */
   ::view-transition-group(main-content) {
     animation: none;
   }
@@ -86,7 +90,6 @@ const { title = "here" } = Astro.props;
     to   { opacity: 1; }
   }
 
-  /* Fallback path for browsers without native VT */
   [data-astro-transition-fallback="old"] .content {
     opacity: 0;
   }
@@ -107,11 +110,6 @@ const { title = "here" } = Astro.props;
       animation: none !important;
       opacity: 1;
     }
-  }
-
-  .content img,
-  .content video {
-    content-visibility: auto;
   }
 
   body {
@@ -152,7 +150,6 @@ const { title = "here" } = Astro.props;
     color: #fff;
     text-decoration: none;
     border-radius: 4px;
-    transition: top 0.2s;
   }
 
   .skip-link:focus { top: 1rem; }
@@ -164,6 +161,33 @@ const { title = "here" } = Astro.props;
     color: #0f4c81;
     display: inline-block;
     margin-bottom: 1.5rem;
+  }
+
+  .tag-badge {
+    display: inline-block;
+    background: #e6f4f1;
+    color: #0d685c;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+  }
+  .tag-badge:hover {
+    background: #ccebe5;
+  }
+
+  .breadcrumbs {
+    font-size: 0.85rem;
+    color: #0284c7;
+    margin-bottom: 1.25rem;
+  }
+  .breadcrumbs a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .breadcrumbs a:hover {
+    text-decoration: underline;
   }
 
   @media (max-width: 800px) {
