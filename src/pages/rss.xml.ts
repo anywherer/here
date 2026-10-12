@@ -57,7 +57,7 @@ export async function GET(context: APIContext) {
           source: ['srcset', 'type', 'media'],
         },
         allowedStyles: {},
-      });
+      }) + `<p><a href="mailto:${SITE.authorEmail}?subject=${encodeURIComponent(`[Reply] ${note.title}`)}">Reply by email</a></p>`;
 
       const absoluteHtml = absolutizeHtml(cleanedHtml, postUrl, siteUrl);
       const description = excerpt(note.entry.data.description || toPlainText(absoluteHtml));
